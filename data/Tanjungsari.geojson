@@ -1,0 +1,32 @@
+{
+"type": "FeatureCollection",
+"name": "Tanjungsari",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS MUHAMMADIYAH WONOSOBO", "Y": -8.108571, "X": 110.5745622 }, "geometry": { "type": "Point", "coordinates": [ 110.5745622, -8.108571 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH JARAH TANJUNGSARI", "Y": -8.0777252, "X": 110.5878106 }, "geometry": { "type": "Point", "coordinates": [ 110.5878106, -8.0777252 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH JRAKAH TANJUNGSARI", "Y": -8.0669122, "X": 110.6290674 }, "geometry": { "type": "Point", "coordinates": [ 110.6290674, -8.0669122 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH KEMADANG TANJUNGSARI", "Y": -8.0931383, "X": 110.5688729 }, "geometry": { "type": "Point", "coordinates": [ 110.5688729, -8.0931383 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BANJARHARJO TANJUNGSARI", "Y": -8.0742836, "X": 110.601913 }, "geometry": { "type": "Point", "coordinates": [ 110.601913, -8.0742836 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GATAK TANJUNGSARI", "Y": -8.0742569, "X": 110.5941881 }, "geometry": { "type": "Point", "coordinates": [ 110.5941881, -8.0742569 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GEBANG TANJUNGSARI", "Y": -8.0703447, "X": 110.5692551 }, "geometry": { "type": "Point", "coordinates": [ 110.5692551, -8.0703447 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN HARGOSARI TANJUNGSARI", "Y": -8.0539647, "X": 110.6384151 }, "geometry": { "type": "Point", "coordinates": [ 110.6384151, -8.0539647 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN JATEN TANJUNGSARI", "Y": -8.0892146, "X": 110.6072151 }, "geometry": { "type": "Point", "coordinates": [ 110.6072151, -8.0892146 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KANIGORO TANJUNGSARI", "Y": -8.0878472, "X": 110.5770451 }, "geometry": { "type": "Point", "coordinates": [ 110.5770451, -8.0878472 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KEMADANG TANJUNGSARI", "Y": -8.0687315, "X": 110.5259302 }, "geometry": { "type": "Point", "coordinates": [ 110.5259302, -8.0687315 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KEMIRI I TANJUNGSARI", "Y": -8.0688399, "X": 110.5568304 }, "geometry": { "type": "Point", "coordinates": [ 110.5568304, -8.0688399 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KEMIRI II TANJUNGSARI", "Y": -8.0696456, "X": 110.5831469 }, "geometry": { "type": "Point", "coordinates": [ 110.5831469, -8.0696456 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN MENDANG TANJUNGSARI", "Y": -8.0720493, "X": 110.6112273 }, "geometry": { "type": "Point", "coordinates": [ 110.6112273, -8.0720493 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN MENTEL I TANJUNGSARI", "Y": -8.0590122, "X": 110.6149549 }, "geometry": { "type": "Point", "coordinates": [ 110.6149549, -8.0590122 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN MENTEL II TANJUNGSARI", "Y": -8.0573966, "X": 110.6112923 }, "geometry": { "type": "Point", "coordinates": [ 110.6112923, -8.0573966 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGESTIHARJO TANJUNGSARI", "Y": -8.0971754, "X": 110.6034415 }, "geometry": { "type": "Point", "coordinates": [ 110.6034415, -8.0971754 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PANGGANG TANJUNGSARI", "Y": -8.0614846, "X": 110.5614551 }, "geometry": { "type": "Point", "coordinates": [ 110.5614551, -8.0614846 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN REJOSARI TANJUNGSARI", "Y": -8.1101443, "X": 110.5590594 }, "geometry": { "type": "Point", "coordinates": [ 110.5590594, -8.1101443 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP MUHAMMADIYAH TANJUNGSARI", "Y": -8.0607214, "X": 110.6163104 }, "geometry": { "type": "Point", "coordinates": [ 110.6163104, -8.0607214 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 1 TANJUNGSARI", "Y": -8.1116926, "X": 110.5592495 }, "geometry": { "type": "Point", "coordinates": [ 110.5592495, -8.1116926 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 2 TANJUNGSARI", "Y": -8.0950188, "X": 110.6089967 }, "geometry": { "type": "Point", "coordinates": [ 110.6089967, -8.0950188 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 3 TANJUNGSARI", "Y": -8.0698239, "X": 110.5693099 }, "geometry": { "type": "Point", "coordinates": [ 110.5693099, -8.0698239 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMAN 1 TANJUNGSARI", "Y": -8.0634147, "X": 110.5749151 }, "geometry": { "type": "Point", "coordinates": [ 110.5749151, -8.0634147 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMKN 1 TANJUNGSARI", "Y": -8.1131053, "X": 110.5594577 }, "geometry": { "type": "Point", "coordinates": [ 110.5594577, -8.1131053 ] } }
+]
+}

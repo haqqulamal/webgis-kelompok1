@@ -1,0 +1,24 @@
+{
+"type": "FeatureCollection",
+"name": "Puwosari",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN GIRIASIH PURWOSARI", "Y": -7.994705, "X": 110.3623775 }, "geometry": { "type": "Point", "coordinates": [ 110.3623775, -7.994705 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN GIRICAHYO PURWOSARI", "Y": -8.0294252, "X": 110.3656263 }, "geometry": { "type": "Point", "coordinates": [ 110.3656263, -8.0294252 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN GIRIPURWO PURWOSARI", "Y": -8.0251175, "X": 110.4035118 }, "geometry": { "type": "Point", "coordinates": [ 110.4035118, -8.0251175 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN GIRITIRTO PURWOSARI", "Y": -7.9941826, "X": 110.371637 }, "geometry": { "type": "Point", "coordinates": [ 110.371637, -7.9941826 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN KARANGNONGKO I PURWOSARI", "Y": -8.03208, "X": 110.3968482 }, "geometry": { "type": "Point", "coordinates": [ 110.3968482, -8.03208 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN KARANGNONGKO II PURWOSARI", "Y": -8.027144, "X": 110.3576951 }, "geometry": { "type": "Point", "coordinates": [ 110.3576951, -8.027144 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN KARANGNONGKO III PURWOSARI", "Y": -8.0303434, "X": 110.4001899 }, "geometry": { "type": "Point", "coordinates": [ 110.4001899, -8.0303434 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN KARANGTENGAH I PURWOSARI", "Y": -8.0246099, "X": 110.3554828 }, "geometry": { "type": "Point", "coordinates": [ 110.3554828, -8.0246099 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN KARANGTENGAH II PURWOSARI", "Y": -8.0301786, "X": 110.3621914 }, "geometry": { "type": "Point", "coordinates": [ 110.3621914, -8.0301786 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN KLAMPOK PURWOSARI", "Y": -8.0351565, "X": 110.4075198 }, "geometry": { "type": "Point", "coordinates": [ 110.4075198, -8.0351565 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN NANAS PURWOSARI", "Y": -8.0031247, "X": 110.3424451 }, "geometry": { "type": "Point", "coordinates": [ 110.3424451, -8.0031247 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN PETOYAN I PURWOSARI", "Y": -7.9989259, "X": 110.3797482 }, "geometry": { "type": "Point", "coordinates": [ 110.3797482, -7.9989259 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN PETOYAN II PURWOSARI", "Y": -7.9972907, "X": 110.3787712 }, "geometry": { "type": "Point", "coordinates": [ 110.3787712, -7.9972907 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SMP NEGERI 1 PURWOSARI", "Y": -7.7659521, "X": 112.7495208 }, "geometry": { "type": "Point", "coordinates": [ 112.7495208, -7.7659521 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SMP NEGERI 2 PURWOSARI", "Y": -8.0019811, "X": 110.3424793 }, "geometry": { "type": "Point", "coordinates": [ 110.3424793, -8.0019811 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SLB PURWO RAHARJO", "Y": -7.9938588, "X": 110.3718297 }, "geometry": { "type": "Point", "coordinates": [ 110.3718297, -7.9938588 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SMKN 1 PURWOSARI", "Y": -8.0248355, "X": 110.4028182 }, "geometry": { "type": "Point", "coordinates": [ 110.4028182, -8.0248355 ] } }
+]
+}

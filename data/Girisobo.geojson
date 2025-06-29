@@ -1,0 +1,32 @@
+{
+"type": "FeatureCollection",
+"name": "Girisobo",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "Nama Sekolah": "MIS YAPPI BALONG", "Y": -8.1388339, "X": 110.69699 }, "geometry": { "type": "Point", "coordinates": [ 110.69699, -8.1388339 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "MIS YAPPI TEKIK", "Y": -8.1494396, "X": 110.7586972 }, "geometry": { "type": "Point", "coordinates": [ 110.7586972, -8.1494396 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SD BOPKRI KARANGAWEN GIRISUBO", "Y": -8.1490618, "X": 110.7354904 }, "geometry": { "type": "Point", "coordinates": [ 110.7354904, -8.1490618 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SD MUHAMMADIYAH UNGGULAN AL-FALAH GIRISUBO", "Y": -8.1230695, "X": 110.762695 }, "geometry": { "type": "Point", "coordinates": [ 110.762695, -8.1230695 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN BALONG GIRISUBO", "Y": -8.1474936, "X": 110.6996251 }, "geometry": { "type": "Point", "coordinates": [ 110.6996251, -8.1474936 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN BALONG III GIRISUBO", "Y": -8.1450514, "X": 110.7003374 }, "geometry": { "type": "Point", "coordinates": [ 110.7003374, -8.1450514 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN GABUGAN GIRISUBO", "Y": -8.1659947, "X": 110.8118951 }, "geometry": { "type": "Point", "coordinates": [ 110.8118951, -8.1659947 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN JEPITU I GIRISUBO", "Y": -8.1497247, "X": 110.7097451 }, "geometry": { "type": "Point", "coordinates": [ 110.7097451, -8.1497247 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN JEPITU III GIRISUBO", "Y": -8.148952, "X": 110.7251845 }, "geometry": { "type": "Point", "coordinates": [ 110.7251845, -8.148952 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN JOHO GIRISUBO", "Y": -8.1866338, "X": 110.7548726 }, "geometry": { "type": "Point", "coordinates": [ 110.7548726, -8.1866338 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN KANDRI GIRISUBO", "Y": -8.1781663, "X": 110.7690724 }, "geometry": { "type": "Point", "coordinates": [ 110.7690724, -8.1781663 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN NGLINDUR GIRISUBO", "Y": -8.1262567, "X": 110.7639329 }, "geometry": { "type": "Point", "coordinates": [ 110.7639329, -8.1262567 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN PUCUNG GIRISUBO", "Y": -8.1624723, "X": 110.779767 }, "geometry": { "type": "Point", "coordinates": [ 110.779767, -8.1624723 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN RONGKOP GIRISUBO", "Y": -8.1637494, "X": 110.7664083 }, "geometry": { "type": "Point", "coordinates": [ 110.7664083, -8.1637494 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN SONGBANYU I GIRISUBO", "Y": -8.1481298, "X": 110.7979436 }, "geometry": { "type": "Point", "coordinates": [ 110.7979436, -8.1481298 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN SONGBANYU II GIRISUBO", "Y": -8.1731618, "X": 110.8259747 }, "geometry": { "type": "Point", "coordinates": [ 110.8259747, -8.1731618 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN TILENG I GIRISUBO", "Y": -8.1633543, "X": 110.7567656 }, "geometry": { "type": "Point", "coordinates": [ 110.7567656, -8.1633543 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN TILENG II GIRISUBO", "Y": -8.1568535, "X": 110.7543364 }, "geometry": { "type": "Point", "coordinates": [ 110.7543364, -8.1568535 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN TILENG III GIRISUBO", "Y": -8.1649723, "X": 110.715393 }, "geometry": { "type": "Point", "coordinates": [ 110.715393, -8.1649723 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN WOTAWATI GIRISUBO", "Y": -8.1486195, "X": 110.7686881 }, "geometry": { "type": "Point", "coordinates": [ 110.7686881, -8.1486195 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SMP NEGERI 1 GIRISUBO", "Y": -8.1533803, "X": 110.7668812 }, "geometry": { "type": "Point", "coordinates": [ 110.7668812, -8.1533803 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SMP NEGERI 2 GIRISUBO", "Y": -8.1526669, "X": 110.7100305 }, "geometry": { "type": "Point", "coordinates": [ 110.7100305, -8.1526669 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SMP NEGERI 3 GIRISUBO", "Y": -8.1866647, "X": 110.8286251 }, "geometry": { "type": "Point", "coordinates": [ 110.8286251, -8.1866647 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SMK TAMAN KARYA MADYA TEHNIK", "Y": -8.1481277, "X": 110.2065991 }, "geometry": { "type": "Point", "coordinates": [ 110.2065991, -8.1481277 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SMKN 1 GIRISUBO", "Y": -8.1509054, "X": 110.7106004 }, "geometry": { "type": "Point", "coordinates": [ 110.7106004, -8.1509054 ] } }
+]
+}

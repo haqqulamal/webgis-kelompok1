@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebGIS Dashboard</title>
+
+  <!-- Leaflet JS & CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <!-- Leaflet AJAX plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/leaflet-ajax@0.0.1/leaflet.ajax.min.js"></script>
+
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+
+  <style>
+    #map {
+      height: 100vh;
+      width: 100%;
+    }
+    .sidebar {
+      width: 250px;
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100%;
+      background: #2d3748;
+      padding: 20px;
+      color: white;
+      z-index: 1000;
+    }
+    .content {
+      margin-left: 250px;
+    }
+    .hidden {
+      display: none;
+    }
+    /* Style for GeoJSON markers */
+    .school-icon {
+      background-color: red;
+      border-radius: 50%;
+      width: 10px;
+      height: 10px;
+      border: 1px solid black;
+    }
+    .other-icon {
+      background-color: blue;
+      border-radius: 50%;
+      width: 10px;
+      height: 10px;
+      border: 1px solid black;
+    }
+    .legend {
+      padding: 10px;
+      background: white;
+      background: rgba(255,255,255,0.8);
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      border-radius: 5px;
+      line-height: 1.5;
+    }
+    .legend h4 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+    .db-section {
+      padding: 20px;
+      max-height: 100vh;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2 class="text-xl font-semibold mb-5">
+      Fasilitas Pendidikan Dasar dan Menengah Kab. Gunungkidul
+      Kelompok 1 - Praktikum SIG Terapan
+    </h2>
+    <ul class="space-y-4">
+      <li>
+        <button id="mapBtn" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md text-white">
+          Maps
+        </button>
+      </li>
+      <li>
+        <button id="dbBtn" class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 rounded-md text-white">
+          Database
+        </button>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Content Area -->
+  <div class="content">
+    <!-- Map Section - Langsung tampil tanpa class hidden -->
+    <div id="mapSection">
+      <div id="map"></div>
+    </div>
+
+    <!-- Database Section -->
+    <div id="dbSection" class="hidden db-section">
+      <h3 class="text-2xl font-semibold mb-5">Download Data</h3>
+      <p class="mb-4">Klik tombol di bawah untuk mengunduh data dalam format PDF.</p>
+      <div class="space-y-3">
+        <button id="downloadkecamatanpanggang" class="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-md text-white">
+          Download Kecamatan Panggang
+        </button>
+        <button id="downloadkecamatanpaliyan" class="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-md text-white">
+          Download Kecamatan Paliyan
+        </button>
+        <button id="downloadkecamatansaptosari" class="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-md text-white">
+          Download Kecamatan Saptosari
+        </button>
+        <button id="downloadkecamatantepus" class="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-md text-white">
+          Download Kecamatan Tepus
+        </button>
+        <button id="downloadkecamatantanjungsari" class="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-md text-white">
+          Download Kecamatan Tanjungsari
+        </button>
+        <button id="downloadkecamatanrongkop" class="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-md text-white">
+          Download Kecamatan Rongkop
+        </button>
+        <button id="downloadkecamatansemanu" class="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-md text-white">
+          Download Kecamatan Semanu
+        </button>
+        <button id="downloadkecamatanponjong" class="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-md text-white">
+          Download Kecamatan Ponjong
+        </button>
+        <button id="downloadkecamatangirisubo" class="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-md text-white">
+          Download Kecamatan Girisubo
+        </button>
+        <button id="downloadkecamatanpurwosari" class="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-md text-white">
+          Download Kecamatan Purwosari
+        </button>
+        <button id="downloadkecamatankarangmojo" class="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-md text-white">
+          Download Kecamatan Karangmojo
+        </button>
+        <button id="downloadkecamatanwonosari" class="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-md text-white">
+          Download Kecamatan Wonosari
+        </button>
+        <button id="downloadkecamatanplayen" class="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-md text-white">
+          Download Kecamatan Playen
+        </button>
+        <button id="downloadkecamatanpatuk" class="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-md text-white">
+          Download Kecamatan Patuk
+        </button>
+        <button id="downloadkecamatangedangsari" class="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-md text-white">
+          Download Kecamatan Gedangsari
+        </button>
+        <button id="downloadkecamatannglipar" class="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-md text-white">
+          Download Kecamatan Nglipar
+        </button>
+        <button id="downloadkecamatanngawen" class="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-md text-white">
+          Download Kecamatan Ngawen
+        </button>
+        <button id="downloadkecamatansemin" class="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-md text-white">
+          Download Kecamatan Semin
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    let map;
+    
+    // Initialize map ketika halaman dimuat
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeMap();
+    });
+
+    // Toggle Sections
+    document.getElementById("mapBtn").addEventListener("click", function () {
+      document.getElementById("mapSection").classList.remove("hidden");
+      document.getElementById("dbSection").classList.add("hidden");
+      // Refresh map size jika sudah ada map
+      if (map) {
+        setTimeout(() => map.invalidateSize(), 100);
+      }
+    });
+
+    document.getElementById("dbBtn").addEventListener("click", function () {
+      document.getElementById("mapSection").classList.add("hidden");
+      document.getElementById("dbSection").classList.remove("hidden");
+    });
+
+    // Initialize Leaflet Map
+    function initializeMap() {
+      // Jika map sudah ada, jangan buat lagi
+      if (map) {
+        map.invalidateSize();
+        return;
+      }
+
+      map = L.map("map").setView([-7.977, 110.367], 12);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+     
+
+      // Your GeoJSON data
+      const geojsonData = {
+       "type": "FeatureCollection",
+"name": "PANGGANG",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS MUHAMMADIYAH MACANMATI", "Y": -8.0398794, "X": 110.4460031 }, "geometry": { "type": "Point", "coordinates": [ 110.4460031, -8.0398794 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSS PDHI GIRIKARTO", "Y": -8.0706059, "X": 110.4540465 }, "geometry": { "type": "Point", "coordinates": [ 110.4540465, -8.0706059 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD IT BINA INSANI PANGGANG", "Y": -8.022282, "X": 110.390437 }, "geometry": { "type": "Point", "coordinates": [ 110.390437, -8.022282 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BANYUMENENG PANGGANG", "Y": -7.983602, "X": 110.4024247 }, "geometry": { "type": "Point", "coordinates": [ 110.4024247, -7.983602 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BIBAL PANGGANG", "Y": -7.983602, "X": 110.4024247 }, "geometry": { "type": "Point", "coordinates": [ 110.4024247, -7.983602 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GIRIKARTO PANGGANG", "Y": -8.0717906, "X": 110.4182266 }, "geometry": { "type": "Point", "coordinates": [ 110.4182266, -8.0717906 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GIRIMULYO PANGGANG", "Y": -8.04628, "X": 110.43371 }, "geometry": { "type": "Point", "coordinates": [ 110.43371, -8.04628 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GIRISEKAR PANGGANG", "Y": -8.0351165, "X": 110.4621337 }, "geometry": { "type": "Point", "coordinates": [ 110.4621337, -8.0351165 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GIRISUKO PANGGANG", "Y": -8.0055966, "X": 110.4092821 }, "geometry": { "type": "Point", "coordinates": [ 110.4092821, -8.0055966 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN LEGUNDI I PANGGANG", "Y": -8.0356379, "X": 110.4359696 }, "geometry": { "type": "Point", "coordinates": [ 110.4359696, -8.0356379 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN LEGUNDI II PANGGANG", "Y": -8.036497, "X": 110.4306583 }, "geometry": { "type": "Point", "coordinates": [ 110.4306583, -8.036497 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PACAR PANGGANG", "Y": -8.00273, "X": 110.46771 }, "geometry": { "type": "Point", "coordinates": [ 110.46771, -8.00273 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PANGGANG I PANGGANG", "Y": -8.0157971, "X": 110.3859378 }, "geometry": { "type": "Point", "coordinates": [ 110.3859378, -8.0157971 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PANGGANG II PANGGANG", "Y": -8.0142273, "X": 110.4200187 }, "geometry": { "type": "Point", "coordinates": [ 110.4200187, -8.0142273 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PEJATEN PANGGANG", "Y": -8.0408601, "X": 110.421552 }, "geometry": { "type": "Point", "coordinates": [ 110.421552, -8.0408601 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SAWAH PANGGANG", "Y": -8.0508644, "X": 110.4550537 }, "geometry": { "type": "Point", "coordinates": [ 110.4550537, -8.0508644 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TEMUIRENG I PANGGANG", "Y": -7.9999713, "X": 110.4574494 }, "geometry": { "type": "Point", "coordinates": [ 110.4574494, -7.9999713 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TEMUIRENG II PANGGANG", "Y": -8.0116304, "X": 110.4204016 }, "geometry": { "type": "Point", "coordinates": [ 110.4204016, -8.0116304 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TURUNAN PANGGANG", "Y": -7.97846, "X": 110.4332 }, "geometry": { "type": "Point", "coordinates": [ 110.4332, -7.97846 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN WILOSO I PANGGANG", "Y": -8.0710874, "X": 110.4411692 }, "geometry": { "type": "Point", "coordinates": [ 110.4411692, -8.0710874 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN WILOSO II PANGGANG", "Y": -8.06291, "X": 110.43144 }, "geometry": { "type": "Point", "coordinates": [ 110.43144, -8.06291 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP BINA MUDA PANGGANG", "Y": -8.0162578, "X": 110.4174089 }, "geometry": { "type": "Point", "coordinates": [ 110.4174089, -8.0162578 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP MUHAMMADIYAH PANGGANG", "Y": -8.0162578, "X": 110.4174089 }, "geometry": { "type": "Point", "coordinates": [ 110.4174089, -8.0162578 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 1 PANGGANG", "Y": -8.0198908, "X": 110.4205531 }, "geometry": { "type": "Point", "coordinates": [ 110.4205531, -8.0198908 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 2 PANGGANG", "Y": -8.0332549, "X": 110.4658149 }, "geometry": { "type": "Point", "coordinates": [ 110.4658149, -8.0332549 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 3 PANGGANG", "Y": -7.9993812, "X": 110.4620754 }, "geometry": { "type": "Point", "coordinates": [ 110.4620754, -7.9993812 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 5 PANGGANG", "Y": -7.9763614, "X": 110.4168928 }, "geometry": { "type": "Point", "coordinates": [ 110.4168928, -7.9763614 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SLBS SEKAR HANDAYANI", "Y": -8.0368085, "X": 110.4576345 }, "geometry": { "type": "Point", "coordinates": [ 110.4576345, -8.0368085 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMAN 1 PANGGANG", "Y": -8.0221237, "X": 110.4209916 }, "geometry": { "type": "Point", "coordinates": [ 110.4209916, -8.0221237 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS MUHAMMADIYAH SODO", "Y": -8.0089118, "X": 110.5575119 }, "geometry": { "type": "Point", "coordinates": [ 110.5575119, -8.0089118 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS MUHAMMADIYAH TRUKAN", "Y": -8.0062573, "X": 110.5320406 }, "geometry": { "type": "Point", "coordinates": [ 110.5320406, -8.0062573 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI BANJARAN", "Y": -8.0505259, "X": 110.5212401 }, "geometry": { "type": "Point", "coordinates": [ 110.5212401, -8.0505259 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI MULUSAN", "Y": -8.0099815, "X": 110.5522829 }, "geometry": { "type": "Point", "coordinates": [ 110.5522829, -8.0099815 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSS MUHAMMADIYAH SODO", "Y": -8.0026124, "X": 110.5608014 }, "geometry": { "type": "Point", "coordinates": [ 110.5608014, -8.0026124 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSS YAPPI MULUSAN PALIYAN", "Y": -8.0099815, "X": 110.5522829 }, "geometry": { "type": "Point", "coordinates": [ 110.5522829, -8.0099815 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD KI AGENG GIRING PALIYAN", "Y": -8.0415586, "X": 110.5559353 }, "geometry": { "type": "Point", "coordinates": [ 110.5559353, -8.0415586 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH GROGOL PALIYAN", "Y": -7.9791097, "X": 110.5377393 }, "geometry": { "type": "Point", "coordinates": [ 110.5377393, -7.9791097 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH KARANGDUWET PALIYAN", "Y": -8.00667, "X": 110.49731 }, "geometry": { "type": "Point", "coordinates": [ 110.49731, -8.00667 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH MULUSAN I PALIYAN", "Y": -8.0049067, "X": 110.5430119 }, "geometry": { "type": "Point", "coordinates": [ 110.5430119, -8.0049067 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH MULUSAN II PALIYAN", "Y": -8.0003229, "X": 110.5381841 }, "geometry": { "type": "Point", "coordinates": [ 110.5381841, -8.0003229 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD SANJAYA GIRING PALIYAN", "Y": -8.0642538, "X": 110.5517914 }, "geometry": { "type": "Point", "coordinates": [ 110.5517914, -8.0642538 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GIRING PALIYAN", "Y": -8.0153569, "X": 110.5276002 }, "geometry": { "type": "Point", "coordinates": [ 110.5276002, -8.0153569 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGASEM PALIYAN", "Y": -8.0069135, "X": 110.5252053 }, "geometry": { "type": "Point", "coordinates": [ 110.5252053, -8.0069135 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGMOJO II PALIYAN", "Y": -7.9804216, "X": 110.5381735 }, "geometry": { "type": "Point", "coordinates": [ 110.5381735, -7.9804216 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN MULUSAN PALIYAN", "Y": -8.009234, "X": 110.5462779 }, "geometry": { "type": "Point", "coordinates": [ 110.5462779, -8.009234 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PALIYAN I PALIYAN", "Y": -8.0030917, "X": 110.50485 }, "geometry": { "type": "Point", "coordinates": [ 110.50485, -8.0030917 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PALIYAN II PALIYAN", "Y": -8.0012828, "X": 110.5006013 }, "geometry": { "type": "Point", "coordinates": [ 110.5006013, -8.0012828 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PALIYAN III PALIYAN", "Y": -8.0542262, "X": 110.5525013 }, "geometry": { "type": "Point", "coordinates": [ 110.5525013, -8.0542262 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PALIYAN IV PALIYAN", "Y": -8.0049006, "X": 110.5040774 }, "geometry": { "type": "Point", "coordinates": [ 110.5040774, -8.0049006 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PALIYAN V PALIYAN", "Y": -8.0050869, "X": 110.519314 }, "geometry": { "type": "Point", "coordinates": [ 110.519314, -8.0050869 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PAMPANG I PALIYAN", "Y": -7.9884287, "X": 110.5422358 }, "geometry": { "type": "Point", "coordinates": [ 110.5422358, -7.9884287 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PAMPANG II PALIYAN", "Y": -7.9884287, "X": 110.5422358 }, "geometry": { "type": "Point", "coordinates": [ 110.5422358, -7.9884287 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PELEMGEDE PALIYAN", "Y": -8.0023611, "X": 110.5604004 }, "geometry": { "type": "Point", "coordinates": [ 110.5604004, -8.0023611 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SODO PALIYAN", "Y": -8.0026437, "X": 110.5612692 }, "geometry": { "type": "Point", "coordinates": [ 110.5612692, -8.0026437 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TROWONO I PALIYAN", "Y": -8.0026437, "X": 110.5612692 }, "geometry": { "type": "Point", "coordinates": [ 110.5612692, -8.0026437 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP MUHAMMADIYAH 1 PALIYAN", "Y": -7.9788151, "X": 110.5378065 }, "geometry": { "type": "Point", "coordinates": [ 110.5378065, -7.9788151 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP MUHAMMADIYAH 2 PALIYAN", "Y": -8.0014829, "X": 110.5132233 }, "geometry": { "type": "Point", "coordinates": [ 110.5132233, -8.0014829 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 1 PALIYAN", "Y": -8.0014829, "X": 110.5132233 }, "geometry": { "type": "Point", "coordinates": [ 110.5132233, -8.0014829 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 2 PALIYAN", "Y": -8.0681322, "X": 110.5507495 }, "geometry": { "type": "Point", "coordinates": [ 110.5507495, -8.0681322 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SLB Krida Mulia II", "Y": -8.0046226, "X": 110.5142637 }, "geometry": { "type": "Point", "coordinates": [ 110.5142637, -8.0046226 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI BALONG", "Y": -8.1388339, "X": 110.69699 }, "geometry": { "type": "Point", "coordinates": [ 110.69699, -8.1388339 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI TEKIK", "Y": -8.1494396, "X": 110.7586972 }, "geometry": { "type": "Point", "coordinates": [ 110.7586972, -8.1494396 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD BOPKRI KARANGAWEN GIRISUBO", "Y": -8.1490618, "X": 110.7354904 }, "geometry": { "type": "Point", "coordinates": [ 110.7354904, -8.1490618 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH UNGGULAN AL-FALAH GIRISUBO", "Y": -8.1230695, "X": 110.762695 }, "geometry": { "type": "Point", "coordinates": [ 110.762695, -8.1230695 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BALONG GIRISUBO", "Y": -8.1474936, "X": 110.6996251 }, "geometry": { "type": "Point", "coordinates": [ 110.6996251, -8.1474936 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BALONG III GIRISUBO", "Y": -8.1450514, "X": 110.7003374 }, "geometry": { "type": "Point", "coordinates": [ 110.7003374, -8.1450514 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GABUGAN GIRISUBO", "Y": -8.1659947, "X": 110.8118951 }, "geometry": { "type": "Point", "coordinates": [ 110.8118951, -8.1659947 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN JEPITU I GIRISUBO", "Y": -8.1497247, "X": 110.7097451 }, "geometry": { "type": "Point", "coordinates": [ 110.7097451, -8.1497247 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN JEPITU III GIRISUBO", "Y": -8.148952, "X": 110.7251845 }, "geometry": { "type": "Point", "coordinates": [ 110.7251845, -8.148952 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN JOHO GIRISUBO", "Y": -8.1866338, "X": 110.7548726 }, "geometry": { "type": "Point", "coordinates": [ 110.7548726, -8.1866338 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KANDRI GIRISUBO", "Y": -8.1781663, "X": 110.7690724 }, "geometry": { "type": "Point", "coordinates": [ 110.7690724, -8.1781663 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGLINDUR GIRISUBO", "Y": -8.1262567, "X": 110.7639329 }, "geometry": { "type": "Point", "coordinates": [ 110.7639329, -8.1262567 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PUCUNG GIRISUBO", "Y": -8.1624723, "X": 110.779767 }, "geometry": { "type": "Point", "coordinates": [ 110.779767, -8.1624723 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN RONGKOP GIRISUBO", "Y": -8.1637494, "X": 110.7664083 }, "geometry": { "type": "Point", "coordinates": [ 110.7664083, -8.1637494 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SONGBANYU I GIRISUBO", "Y": -8.1481298, "X": 110.7979436 }, "geometry": { "type": "Point", "coordinates": [ 110.7979436, -8.1481298 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SONGBANYU II GIRISUBO", "Y": -8.1731618, "X": 110.8259747 }, "geometry": { "type": "Point", "coordinates": [ 110.8259747, -8.1731618 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TILENG I GIRISUBO", "Y": -8.1633543, "X": 110.7567656 }, "geometry": { "type": "Point", "coordinates": [ 110.7567656, -8.1633543 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TILENG II GIRISUBO", "Y": -8.1568535, "X": 110.7543364 }, "geometry": { "type": "Point", "coordinates": [ 110.7543364, -8.1568535 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TILENG III GIRISUBO", "Y": -8.1649723, "X": 110.715393 }, "geometry": { "type": "Point", "coordinates": [ 110.715393, -8.1649723 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN WOTAWATI GIRISUBO", "Y": -8.1486195, "X": 110.7686881 }, "geometry": { "type": "Point", "coordinates": [ 110.7686881, -8.1486195 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 1 GIRISUBO", "Y": -8.1533803, "X": 110.7668812 }, "geometry": { "type": "Point", "coordinates": [ 110.7668812, -8.1533803 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 2 GIRISUBO", "Y": -8.1526669, "X": 110.7100305 }, "geometry": { "type": "Point", "coordinates": [ 110.7100305, -8.1526669 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 3 GIRISUBO", "Y": -8.1866647, "X": 110.8286251 }, "geometry": { "type": "Point", "coordinates": [ 110.8286251, -8.1866647 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMKN 1 GIRISUBO", "Y": -8.1509054, "X": 110.7106004 }, "geometry": { "type": "Point", "coordinates": [ 110.7106004, -8.1509054 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIN 9 GUNUNGKIDUL", "Y": -7.961168534, "X": 110.678077 }, "geometry": { "type": "Point", "coordinates": [ 110.678077, -7.961168534 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI KALANGAN", "Y": -7.974251879, "X": 110.6903644 }, "geometry": { "type": "Point", "coordinates": [ 110.6903644, -7.974251879 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI REJOSARI", "Y": -7.919378721, "X": 110.6732262 }, "geometry": { "type": "Point", "coordinates": [ 110.6732262, -7.919378721 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSN 8 GUNUNGKIDUL", "Y": null, "X": null }, "geometry": null },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD ALAM ALMARINA ISLAMIC BOARDING SCHOOL", "Y": -7.960940141, "X": 110.6761327 }, "geometry": { "type": "Point", "coordinates": [ 110.6761327, -7.960940141 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD IT PERMATA BANGSA KARANGMOJO", "Y": -7.96048436, "X": 110.6747807 }, "geometry": { "type": "Point", "coordinates": [ 110.6747807, -7.96048436 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH BRANJANG KARANGMOJO", "Y": -7.930096514, "X": 110.6731784 }, "geometry": { "type": "Point", "coordinates": [ 110.6731784, -7.930096514 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH SUMBEREJO KARANGMOJO", "Y": -7.940860538, "X": 110.6869226 }, "geometry": { "type": "Point", "coordinates": [ 110.6869226, -7.940860538 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH UNGGULAN KARANGMOJO", "Y": null, "X": null }, "geometry": null },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN Banyubening I Karangmojo", "Y": -7.942868622, "X": 110.6388792 }, "geometry": { "type": "Point", "coordinates": [ 110.6388792, -7.942868622 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN Banyubening III Karangmojo", "Y": -7.9497694, "X": 110.6328526 }, "geometry": { "type": "Point", "coordinates": [ 110.6328526, -7.9497694 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN Bendungan I Karangmojo", "Y": -7.960378577, "X": 110.6298814 }, "geometry": { "type": "Point", "coordinates": [ 110.6298814, -7.960378577 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BENDUNGAN II KARANGMOJO", "Y": -7.969193847, "X": 110.6334573 }, "geometry": { "type": "Point", "coordinates": [ 110.6334573, -7.969193847 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BENDUNGAN III KARANGMOJO", "Y": -7.96131689, "X": 110.6378721 }, "geometry": { "type": "Point", "coordinates": [ 110.6378721, -7.96131689 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN CANDI I KARANGMOJO", "Y": -7.906128533, "X": 110.6886821 }, "geometry": { "type": "Point", "coordinates": [ 110.6886821, -7.906128533 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN CANDI II KARANGMOJO", "Y": -7.913580172, "X": 110.679431 }, "geometry": { "type": "Point", "coordinates": [ 110.679431, -7.913580172 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN CANDIBARU I KARANGMOJO", "Y": -7.897337964, "X": 110.693391 }, "geometry": { "type": "Point", "coordinates": [ 110.693391, -7.897337964 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN CANDIBARU II KARANGMOJO", "Y": -7.897338793, "X": 110.6933903 }, "geometry": { "type": "Point", "coordinates": [ 110.6933903, -7.897338793 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GEDANGAN I KARANGMOJO", "Y": -7.930949157, "X": 110.6909457 }, "geometry": { "type": "Point", "coordinates": [ 110.6909457, -7.930949157 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GEDANGAN KARANGMOJO", "Y": -7.942426202, "X": 110.6826334 }, "geometry": { "type": "Point", "coordinates": [ 110.6826334, -7.942426202 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN Gelaran I Karangmojo", "Y": -7.925877082, "X": 110.6426668 }, "geometry": { "type": "Point", "coordinates": [ 110.6426668, -7.925877082 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GELARAN II KARANGMOJO", "Y": null, "X": null }, "geometry": null },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GELARAN III KARANGMOJO", "Y": -7.928746155, "X": 110.6530441 }, "geometry": { "type": "Point", "coordinates": [ 110.6530441, -7.928746155 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GROGOL I KARANGMOJO", "Y": -7.936477115, "X": 110.6200895 }, "geometry": { "type": "Point", "coordinates": [ 110.6200895, -7.936477115 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN Grogol IV Karangmojo", "Y": -7.939956919, "X": 110.6225178 }, "geometry": { "type": "Point", "coordinates": [ 110.6225178, -7.939956919 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN JETIS KARANGMOJO", "Y": -7.974665013, "X": 110.6673395 }, "geometry": { "type": "Point", "coordinates": [ 110.6673395, -7.974665013 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGANOM I KARANGMOJO", "Y": -7.93017333, "X": 110.6653548 }, "geometry": { "type": "Point", "coordinates": [ 110.6653548, -7.93017333 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGANOM II KARANGMOJO", "Y": -7.93712913, "X": 110.665997 }, "geometry": { "type": "Point", "coordinates": [ 110.665997, -7.93712913 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGDUWET I KARANGMOJO", "Y": -7.966192335, "X": 110.6943678 }, "geometry": { "type": "Point", "coordinates": [ 110.6943678, -7.966192335 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGDUWET III KARANGMOJO", "Y": -7.958733972, "X": 110.6707966 }, "geometry": { "type": "Point", "coordinates": [ 110.6707966, -7.958733972 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGMOJO I KARANGMOJO", "Y": -7.961432101, "X": 110.6912632 }, "geometry": { "type": "Point", "coordinates": [ 110.6912632, -7.961432101 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGMOJO II KARANGMOJO", "Y": -7.953206561, "X": 110.6801147 }, "geometry": { "type": "Point", "coordinates": [ 110.6801147, -7.953206561 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGMOJO III KARANGMOJO", "Y": -7.952957057, "X": 110.6777468 }, "geometry": { "type": "Point", "coordinates": [ 110.6777468, -7.952957057 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGMOJO IV KARANGMOJO", "Y": -7.954154912, "X": 110.6854611 }, "geometry": { "type": "Point", "coordinates": [ 110.6854611, -7.954154912 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGMOJO V KARANGMOJO", "Y": -7.938423232, "X": 110.7057798 }, "geometry": { "type": "Point", "coordinates": [ 110.7057798, -7.938423232 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGWETAN KARANGMOJO", "Y": -7.923956945, "X": 110.7009593 }, "geometry": { "type": "Point", "coordinates": [ 110.7009593, -7.923956945 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGAGEL KARANGMOJO", "Y": -7.957637016, "X": 110.698993 }, "geometry": { "type": "Point", "coordinates": [ 110.698993, -7.957637016 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGAWIS KARANGMOJO", "Y": -7.949072381, "X": 110.663066 }, "geometry": { "type": "Point", "coordinates": [ 110.663066, -7.949072381 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PANGKAH KARANGMOJO", "Y": -7.925038072, "X": 110.6861272 }, "geometry": { "type": "Point", "coordinates": [ 110.6861272, -7.925038072 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PENGKOL KARANGMOJO", "Y": -7.915475602, "X": 110.6870349 }, "geometry": { "type": "Point", "coordinates": [ 110.6870349, -7.915475602 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SLAMETAN KARANGMOJO", "Y": -7.971495351, "X": 110.6595317 }, "geometry": { "type": "Point", "coordinates": [ 110.6595317, -7.971495351 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SOKOLIMAN KARANGMOJO", "Y": -7.915366458, "X": 110.6590664 }, "geometry": { "type": "Point", "coordinates": [ 110.6590664, -7.915366458 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN WILADEG KARANGMOJO", "Y": -7.956278243, "X": 110.6470647 }, "geometry": { "type": "Point", "coordinates": [ 110.6470647, -7.956278243 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP AL HIKMAH KARANGMOJO", "Y": -7.938939908, "X": 110.689026 }, "geometry": { "type": "Point", "coordinates": [ 110.689026, -7.938939908 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP EKAKAPTI KARANGMOJO", "Y": -7.951936863, "X": 110.6694929 }, "geometry": { "type": "Point", "coordinates": [ 110.6694929, -7.951936863 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP MARGALUHUR KARANGMOJO", "Y": -7.895573815, "X": 110.6893492 }, "geometry": { "type": "Point", "coordinates": [ 110.6893492, -7.895573815 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 1 KARANGMOJO", "Y": -7.952463, "X": 110.6757483 }, "geometry": { "type": "Point", "coordinates": [ 110.6757483, -7.952463 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 2 KARANGMOJO", "Y": -7.943186463, "X": 110.6400274 }, "geometry": { "type": "Point", "coordinates": [ 110.6400274, -7.943186463 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 3 KARANGMOJO", "Y": -7.913489344, "X": 110.6877358 }, "geometry": { "type": "Point", "coordinates": [ 110.6877358, -7.913489344 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP PEMBANGUNAN KARANGMOJO", "Y": -7.955300191, "X": 110.6782317 }, "geometry": { "type": "Point", "coordinates": [ 110.6782317, -7.955300191 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MAS AL-HIKMAH KARANGMOJO", "Y": -7.939736667, "X": 110.6886123 }, "geometry": { "type": "Point", "coordinates": [ 110.6886123, -7.939736667 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SLB BAKTI PUTRA", "Y": -7.937122746, "X": 110.6646724 }, "geometry": { "type": "Point", "coordinates": [ 110.6646724, -7.937122746 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMA PEMBANGUNAN 2 KARANGMOJO", "Y": -7.955626331, "X": 110.6783467 }, "geometry": { "type": "Point", "coordinates": [ 110.6783467, -7.955626331 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMAN 1 KARANGMOJO", "Y": -7.966096711, "X": 110.6726465 }, "geometry": { "type": "Point", "coordinates": [ 110.6726465, -7.966096711 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK AL HIKMAH KARANGMOJO", "Y": -7.938948488, "X": 110.6885693 }, "geometry": { "type": "Point", "coordinates": [ 110.6885693, -7.938948488 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK MUHAMMADIYAH KARANGMOJO", "Y": -7.953326647, "X": 110.6808967 }, "geometry": { "type": "Point", "coordinates": [ 110.6808967, -7.953326647 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK PEMBANGUNAN KARANGMOJO", "Y": -7.955271308, "X": 110.67824 }, "geometry": { "type": "Point", "coordinates": [ 110.67824, -7.955271308 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIN 1 GUNUNGKIDUL", "Y": -7.8149347, "X": 110.7217451 }, "geometry": { "type": "Point", "coordinates": [ 110.7217451, -7.8149347 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIN 12 GUNUNGKIDUL", "Y": -7.8144842, "X": 110.6756561 }, "geometry": { "type": "Point", "coordinates": [ 110.6756561, -7.8144842 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI BATUSARI", "Y": -7.8269547, "X": 110.7073251 }, "geometry": { "type": "Point", "coordinates": [ 110.7073251, -7.8269547 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI NOLOGATEN", "Y": -7.8191664, "X": 110.6978409 }, "geometry": { "type": "Point", "coordinates": [ 110.6978409, -7.8191664 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI TOBONG", "Y": -7.8137743, "X": 110.7334528 }, "geometry": { "type": "Point", "coordinates": [ 110.7334528, -7.8137743 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSN 5 GUNUNGKIDUL", "Y": -7.8204995, "X": 110.7214056 }, "geometry": { "type": "Point", "coordinates": [ 110.7214056, -7.8204995 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSS MUHAMMADIYAH NGAWEN", "Y": -7.8377247, "X": 110.6978949 }, "geometry": { "type": "Point", "coordinates": [ 110.6978949, -7.8377247 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD KANISIUS WONOSARI NGAWEN", "Y": -7.816473, "X": 110.6701439 }, "geometry": { "type": "Point", "coordinates": [ 110.6701439, -7.816473 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH SUKOREJO NGAWEN", "Y": -7.8278849, "X": 110.7304029 }, "geometry": { "type": "Point", "coordinates": [ 110.7304029, -7.8278849 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH UNGGULAN ASHIDIQ NGAWEN", "Y": -7.8704322, "X": 110.6876595 }, "geometry": { "type": "Point", "coordinates": [ 110.6876595, -7.8704322 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BEJI NGAWEN", "Y": -7.8390947, "X": 110.6794051 }, "geometry": { "type": "Point", "coordinates": [ 110.6794051, -7.8390947 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BENDO NGAWEN", "Y": -7.8545747, "X": 110.6903251 }, "geometry": { "type": "Point", "coordinates": [ 110.6903251, -7.8545747 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN DAGURAN NGAWEN", "Y": -7.8443255, "X": 110.6698388 }, "geometry": { "type": "Point", "coordinates": [ 110.6698388, -7.8443255 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GUNUNGGAMBAR NGAWEN", "Y": -7.8247866, "X": 110.6676224 }, "geometry": { "type": "Point", "coordinates": [ 110.6676224, -7.8247866 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN JURANGJERO NGAWEN", "Y": -7.8247382, "X": 110.6495976 }, "geometry": { "type": "Point", "coordinates": [ 110.6495976, -7.8247382 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGAMPON NGAWEN", "Y": -7.863341, "X": 110.6784589 }, "geometry": { "type": "Point", "coordinates": [ 110.6784589, -7.863341 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGAWEN I NGAWEN", "Y": -7.8632926, "X": 110.6604341 }, "geometry": { "type": "Point", "coordinates": [ 110.6604341, -7.8632926 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGAWEN II NGAWEN", "Y": -7.8628774, "X": 110.5162193 }, "geometry": { "type": "Point", "coordinates": [ 110.5162193, -7.8628774 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGAWEN IV NGAWEN", "Y": -7.8345721, "X": 110.6886939 }, "geometry": { "type": "Point", "coordinates": [ 110.6886939, -7.8345721 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PAGERJURANG NGAWEN", "Y": -7.8253293, "X": 110.6884725 }, "geometry": { "type": "Point", "coordinates": [ 110.6884725, -7.8253293 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PURWAREJA NGAWEN", "Y": -7.8233824, "X": 110.6993339 }, "geometry": { "type": "Point", "coordinates": [ 110.6993339, -7.8233824 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SAMBENG I NGAWEN", "Y": -7.8159354, "X": 110.7169215 }, "geometry": { "type": "Point", "coordinates": [ 110.7169215, -7.8159354 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SAMBENG II NGAWEN", "Y": -7.83722, "X": 110.6924488 }, "geometry": { "type": "Point", "coordinates": [ 110.6924488, -7.83722 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SAMBIREJO NGAWEN", "Y": -7.81419, "X": 110.7218634 }, "geometry": { "type": "Point", "coordinates": [ 110.7218634, -7.81419 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TANCEP I NGAWEN", "Y": -7.7951198, "X": 110.6686477 }, "geometry": { "type": "Point", "coordinates": [ 110.6686477, -7.7951198 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TANCEP II NGAWEN", "Y": -7.7987082, "X": 110.6660539 }, "geometry": { "type": "Point", "coordinates": [ 110.6660539, -7.7987082 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TOBONG NGAWEN", "Y": -7.8119747, "X": 110.7170451 }, "geometry": { "type": "Point", "coordinates": [ 110.7170451, -7.8119747 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN WATUSIGAR I NGAWEN", "Y": -7.8729725, "X": 110.6804594 }, "geometry": { "type": "Point", "coordinates": [ 110.6804594, -7.8729725 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN WATUSIGAR II NGAWEN", "Y": -7.8729992, "X": 110.6881843 }, "geometry": { "type": "Point", "coordinates": [ 110.6881843, -7.8729992 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP MUHAMMADIYAH UNGGULAN ASHIDIQ NGAWEN", "Y": -7.8237589, "X": 110.7025552 }, "geometry": { "type": "Point", "coordinates": [ 110.7025552, -7.8237589 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 3 NGAWEN", "Y": -7.8503773, "X": 110.6794274 }, "geometry": { "type": "Point", "coordinates": [ 110.6794274, -7.8503773 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 4 NGAWEN", "Y": -7.8015256, "X": 110.6733667 }, "geometry": { "type": "Point", "coordinates": [ 110.6733667, -7.8015256 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 5 NGAWEN", "Y": -7.8202106, "X": 110.6879199 }, "geometry": { "type": "Point", "coordinates": [ 110.6879199, -7.8202106 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP SANJAYA NGAWEN", "Y": -7.8293653, "X": 110.701422 }, "geometry": { "type": "Point", "coordinates": [ 110.701422, -7.8293653 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SLB SUTA WIJAYA", "Y": -7.8071379, "X": 110.684527 }, "geometry": { "type": "Point", "coordinates": [ 110.684527, -7.8071379 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMA MUHAMMADIYAH NGAWEN", "Y": -7.8372512, "X": 110.6981876 }, "geometry": { "type": "Point", "coordinates": [ 110.6981876, -7.8372512 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK MAARIF NGAWEN", "Y": -7.8156379, "X": 110.7230281 }, "geometry": { "type": "Point", "coordinates": [ 110.7230281, -7.8156379 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK MUHAMMADIYAH NGAWEN", "Y": -7.8365069, "X": 110.6989027 }, "geometry": { "type": "Point", "coordinates": [ 110.6989027, -7.8365069 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK SANJAYA GUNUNGKIDUL", "Y": -7.8399306, "X": 110.6992563 }, "geometry": { "type": "Point", "coordinates": [ 110.6992563, -7.8399306 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMKN 1 NGAWEN", "Y": -7.8010527, "X": 110.6740595 }, "geometry": { "type": "Point", "coordinates": [ 110.6740595, -7.8010527 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS MUHAMMADIYAH PENGKOL", "Y": -7.8713684, "X": 110.6054501 }, "geometry": { "type": "Point", "coordinates": [ 110.6054501, -7.8713684 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI NATAH", "Y": -7.8561599, "X": 110.6511242 }, "geometry": { "type": "Point", "coordinates": [ 110.6511242, -7.8561599 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI NGLEBENG", "Y": -7.849252, "X": 110.6247626 }, "geometry": { "type": "Point", "coordinates": [ 110.6247626, -7.849252 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSN 7 GUNUNGKIDUL", "Y": -7.855003, "X": 110.6518667 }, "geometry": { "type": "Point", "coordinates": [ 110.6518667, -7.855003 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSS AL I`ANAH NGLIPAR", "Y": -7.8683218, "X": 110.6172787 }, "geometry": { "type": "Point", "coordinates": [ 110.6172787, -7.8683218 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD ISLAM TERPADU IBNU ABBAS V NGLIPAR", "Y": -7.8617556, "X": 110.6240993 }, "geometry": { "type": "Point", "coordinates": [ 110.6240993, -7.8617556 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH KEDUNGPOH NGLIPAR", "Y": -7.8661541, "X": 110.6124763 }, "geometry": { "type": "Point", "coordinates": [ 110.6124763, -7.8661541 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH KUWARASAN NGLIPAR", "Y": -7.9028641, "X": 110.6137449 }, "geometry": { "type": "Point", "coordinates": [ 110.6137449, -7.9028641 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH PILANGREJO NGLIPAR", "Y": -7.8361604, "X": 110.6407561 }, "geometry": { "type": "Point", "coordinates": [ 110.6407561, -7.8361604 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN CANDI III NGLIPAR", "Y": -7.883118, "X": 110.6727332 }, "geometry": { "type": "Point", "coordinates": [ 110.6727332, -7.883118 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GAJASARI NGLIPAR", "Y": -7.870787, "X": 110.619487 }, "geometry": { "type": "Point", "coordinates": [ 110.619487, -7.870787 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GENTUNGAN III NGLIPAR", "Y": -7.8619355, "X": 110.6453391 }, "geometry": { "type": "Point", "coordinates": [ 110.6453391, -7.8619355 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GENTUNGAN NGLIPAR", "Y": -7.8619088, "X": 110.6376142 }, "geometry": { "type": "Point", "coordinates": [ 110.6376142, -7.8619088 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GLOMPONG NGLIPAR", "Y": -7.8662527, "X": 110.5897837 }, "geometry": { "type": "Point", "coordinates": [ 110.5897837, -7.8662527 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGSARI NGLIPAR", "Y": -7.8796891, "X": 110.5893053 }, "geometry": { "type": "Point", "coordinates": [ 110.5893053, -7.8796891 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KATONGAN I NGLIPAR", "Y": -7.8795967, "X": 110.5506803 }, "geometry": { "type": "Point", "coordinates": [ 110.5506803, -7.8795967 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KATONGAN II NGLIPAR", "Y": -7.8686707, "X": 110.6351186 }, "geometry": { "type": "Point", "coordinates": [ 110.6351186, -7.8686707 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KATONGAN III NGLIPAR", "Y": -7.8746197, "X": 110.6416768 }, "geometry": { "type": "Point", "coordinates": [ 110.6416768, -7.8746197 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KLAYAR NGLIPAR", "Y": -7.8948008, "X": 110.6531238 }, "geometry": { "type": "Point", "coordinates": [ 110.6531238, -7.8948008 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KWARASAN NGLIPAR", "Y": -7.90757417, "X": 110.6183181 }, "geometry": { "type": "Point", "coordinates": [ 110.6183181, -7.90757417 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NATAH NGLIPAR", "Y": -7.847003167, "X": 110.6581017 }, "geometry": { "type": "Point", "coordinates": [ 110.6581017, -7.847003167 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGLIPAR I NGLIPAR", "Y": -7.878326661, "X": 110.6208078 }, "geometry": { "type": "Point", "coordinates": [ 110.6208078, -7.878326661 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGLIPAR II NGLIPAR", "Y": -7.888685228, "X": 110.618352 }, "geometry": { "type": "Point", "coordinates": [ 110.618352, -7.888685228 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PILANGREJO NGLIPAR", "Y": -7.859476003, "X": 110.6419502 }, "geometry": { "type": "Point", "coordinates": [ 110.6419502, -7.859476003 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SENDOWO I NGLIPAR", "Y": -7.884209779, "X": 110.5965861 }, "geometry": { "type": "Point", "coordinates": [ 110.5965861, -7.884209779 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SENDOWO II NGLIPAR", "Y": -7.87543866, "X": 110.5975144 }, "geometry": { "type": "Point", "coordinates": [ 110.5975144, -7.87543866 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SENDOWO III NGLIPAR", "Y": -7.877191251, "X": 110.6108055 }, "geometry": { "type": "Point", "coordinates": [ 110.6108055, -7.877191251 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SIGERUNG NGLIPAR", "Y": -7.858265559, "X": 110.6478651 }, "geometry": { "type": "Point", "coordinates": [ 110.6478651, -7.858265559 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SUMBERJO NGLIPAR", "Y": -7.887316109, "X": 110.625937 }, "geometry": { "type": "Point", "coordinates": [ 110.625937, -7.887316109 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP IT DARRUL MAGHFIROH", "Y": -7.8702576, "X": 110.6130155 }, "geometry": { "type": "Point", "coordinates": [ 110.6130155, -7.8702576 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP MUHAMMADIYAH 1 NGLIPAR", "Y": -7.8572147, "X": 110.6450051 }, "geometry": { "type": "Point", "coordinates": [ 110.6450051, -7.8572147 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP MUHAMMADIYAH 2 NGLIPAR", "Y": -7.8849411, "X": 110.6136705 }, "geometry": { "type": "Point", "coordinates": [ 110.6136705, -7.8849411 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 1 NGLIPAR", "Y": -7.879916, "X": 110.6164223 }, "geometry": { "type": "Point", "coordinates": [ 110.6164223, -7.879916 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 2 NGLIPAR", "Y": -7.8631861, "X": 110.6342092 }, "geometry": { "type": "Point", "coordinates": [ 110.6342092, -7.8631861 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 3 NGLIPAR", "Y": -7.8657762, "X": 110.6577348 }, "geometry": { "type": "Point", "coordinates": [ 110.6577348, -7.8657762 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 4 NGLIPAR", "Y": -7.8859241, "X": 110.5964887 }, "geometry": { "type": "Point", "coordinates": [ 110.5964887, -7.8859241 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MAS MA`ARIF NGLIPAR", "Y": -7.8679342, "X": 110.6175573 }, "geometry": { "type": "Point", "coordinates": [ 110.6175573, -7.8679342 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SLB PUTRA SEJALAN", "Y": -7.8677508, "X": 110.5377299 }, "geometry": { "type": "Point", "coordinates": [ 110.5377299, -7.8677508 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMA MUHAMMADIYAH DAARUL KHOIR GUNUNGKIDUL", "Y": -7.8846066, "X": 110.6134365 }, "geometry": { "type": "Point", "coordinates": [ 110.6134365, -7.8846066 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK TERUNA JAYA GUNUNGKIDUL", "Y": -7.8798002, "X": 110.6173286 }, "geometry": { "type": "Point", "coordinates": [ 110.6173286, -7.8798002 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMKN 1 NGLIPAR", "Y": -7.859658, "X": 110.6389453 }, "geometry": { "type": "Point", "coordinates": [ 110.6389453, -7.859658 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIN 7 GUNUNGKIDUL", "Y": -7.884987439, "X": 110.4897024 }, "geometry": { "type": "Point", "coordinates": [ 110.4897024, -7.884987439 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS AL-MUMTAZ", "Y": null, "X": null }, "geometry": null },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI DOGA", "Y": -7.854089313, "X": 110.5184925 }, "geometry": { "type": "Point", "coordinates": [ 110.5184925, -7.854089313 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI NGEMBES", "Y": -7.867272802, "X": 110.4926104 }, "geometry": { "type": "Point", "coordinates": [ 110.4926104, -7.867272802 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI RINGINTUMPANG", "Y": -7.856113984, "X": 110.4780362 }, "geometry": { "type": "Point", "coordinates": [ 110.4780362, -7.856113984 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI SEMOYO", "Y": -7.879638478, "X": 110.4835744 }, "geometry": { "type": "Point", "coordinates": [ 110.4835744, -7.879638478 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTS MUHAMMADIYAH AL MUHAJIRIN PATUK GUNUNGKIDUL", "Y": -7.848695475, "X": 110.4857398 }, "geometry": { "type": "Point", "coordinates": [ 110.4857398, -7.848695475 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSS JAM`UL MU`AWANAH YAPPI NGEMBES", "Y": -7.867443201, "X": 110.4925234 }, "geometry": { "type": "Point", "coordinates": [ 110.4925234, -7.867443201 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSS YAPPI SUMBERJO", "Y": -7.884605264, "X": 110.489883 }, "geometry": { "type": "Point", "coordinates": [ 110.489883, -7.884605264 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTsSAl Mumtaz Gunungkidul", "Y": -7.876777415, "X": 110.532285 }, "geometry": { "type": "Point", "coordinates": [ 110.532285, -7.876777415 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH 1 PATUK", "Y": -7.884116332, "X": 110.5082112 }, "geometry": { "type": "Point", "coordinates": [ 110.5082112, -7.884116332 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH UNGGULAN AL-FATIH PATUK", "Y": -7.87190562, "X": 110.525877 }, "geometry": { "type": "Point", "coordinates": [ 110.525877, -7.87190562 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BARAN PATUK", "Y": -7.868750796, "X": 110.5062378 }, "geometry": { "type": "Point", "coordinates": [ 110.5062378, -7.868750796 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BEJI PATUK", "Y": -7.878478979, "X": 110.5120586 }, "geometry": { "type": "Point", "coordinates": [ 110.5120586, -7.878478979 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BELANG PATUK", "Y": -7.824756095, "X": 110.5513989 }, "geometry": { "type": "Point", "coordinates": [ 110.5513989, -7.824756095 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BUNDER I PATUK", "Y": -7.878403971, "X": 110.5419698 }, "geometry": { "type": "Point", "coordinates": [ 110.5419698, -7.878403971 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BUNDER II PATUK", "Y": -7.870344222, "X": 110.5232865 }, "geometry": { "type": "Point", "coordinates": [ 110.5232865, -7.870344222 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BUNDER III PATUK", "Y": -7.871946192, "X": 110.5429273 }, "geometry": { "type": "Point", "coordinates": [ 110.5429273, -7.871946192 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN DOGA PATUK", "Y": -7.857592264, "X": 110.5146187 }, "geometry": { "type": "Point", "coordinates": [ 110.5146187, -7.857592264 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KLEPU PATUK", "Y": -7.878354474, "X": 110.5615529 }, "geometry": { "type": "Point", "coordinates": [ 110.5615529, -7.878354474 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGLANGGERAN PATUK", "Y": -7.844416327, "X": 110.5371396 }, "geometry": { "type": "Point", "coordinates": [ 110.5371396, -7.844416327 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGLEGI I PATUK", "Y": -7.867674769, "X": 110.5599502 }, "geometry": { "type": "Point", "coordinates": [ 110.5599502, -7.867674769 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGLEGI II PATUK", "Y": -7.844508753, "X": 110.5679259 }, "geometry": { "type": "Point", "coordinates": [ 110.5679259, -7.844508753 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGORO-ORO PATUK", "Y": -7.835821337, "X": 110.525265 }, "geometry": { "type": "Point", "coordinates": [ 110.525265, -7.835821337 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PANJATAN PATUK", "Y": -7.852484286, "X": 110.4886273 }, "geometry": { "type": "Point", "coordinates": [ 110.4886273, -7.852484286 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PATUK I PATUK", "Y": -7.848556948, "X": 110.4827929 }, "geometry": { "type": "Point", "coordinates": [ 110.4827929, -7.848556948 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PATUK II PATUK", "Y": -7.840804435, "X": 110.4969195 }, "geometry": { "type": "Point", "coordinates": [ 110.4969195, -7.840804435 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PENGKOK PATUK", "Y": -7.873573407, "X": 110.4960805 }, "geometry": { "type": "Point", "coordinates": [ 110.4960805, -7.873573407 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SENDANGSARI PATUK", "Y": -7.86412131, "X": 110.5416893 }, "geometry": { "type": "Point", "coordinates": [ 110.5416893, -7.86412131 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SIDOMULYO PATUK", "Y": -7.864796465, "X": 110.5133275 }, "geometry": { "type": "Point", "coordinates": [ 110.5133275, -7.864796465 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SOKASARI PATUK", "Y": -7.837991441, "X": 110.510845 }, "geometry": { "type": "Point", "coordinates": [ 110.510845, -7.837991441 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TERBAH I PATUK", "Y": -7.823026894, "X": 110.558511 }, "geometry": { "type": "Point", "coordinates": [ 110.558511, -7.823026894 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TERBAH II PATUK", "Y": null, "X": null }, "geometry": null },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN WADUK PATUK", "Y": -7.8573886, "X": 110.482878 }, "geometry": { "type": "Point", "coordinates": [ 110.482878, -7.8573886 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 1 PATUK", "Y": -7.850198842, "X": 110.4783697 }, "geometry": { "type": "Point", "coordinates": [ 110.4783697, -7.850198842 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 2 PATUK", "Y": -7.869897111, "X": 110.5235766 }, "geometry": { "type": "Point", "coordinates": [ 110.5235766, -7.869897111 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 3 PATUK", "Y": -7.871333833, "X": 110.5194003 }, "geometry": { "type": "Point", "coordinates": [ 110.5194003, -7.871333833 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 4 PATUK", "Y": -7.835927813, "X": 110.5264978 }, "geometry": { "type": "Point", "coordinates": [ 110.5264978, -7.835927813 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 5 PATUK", "Y": -7.867354469, "X": 110.5597028 }, "geometry": { "type": "Point", "coordinates": [ 110.5597028, -7.867354469 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MA Nurul Quran", "Y": -7.870600471, "X": 110.4946892 }, "geometry": { "type": "Point", "coordinates": [ 110.4946892, -7.870600471 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SLB SUHARJO PUTRA", "Y": -7.83531067, "X": 110.5331765 }, "geometry": { "type": "Point", "coordinates": [ 110.5331765, -7.83531067 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMAN 1 PATUK", "Y": -7.875765258, "X": 110.5428025 }, "geometry": { "type": "Point", "coordinates": [ 110.5428025, -7.875765258 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK MUHAMMADIYAH 1 PATUK", "Y": -7.869244077, "X": 110.5196023 }, "geometry": { "type": "Point", "coordinates": [ 110.5196023, -7.869244077 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIN 11 GUNUNGKIDUL", "Y": -7.993506164, "X": 110.6865586 }, "geometry": { "type": "Point", "coordinates": [ 110.6865586, -7.993506164 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI PAYAK", "Y": -7.959252784, "X": 110.7301083 }, "geometry": { "type": "Point", "coordinates": [ 110.7301083, -7.959252784 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI PLALAR", "Y": -7.930172473, "X": 110.7247932 }, "geometry": { "type": "Point", "coordinates": [ 110.7247932, -7.930172473 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD YAPPI SAWAHAN", "Y": -7.937752074, "X": 110.7417538 }, "geometry": { "type": "Point", "coordinates": [ 110.7417538, -7.937752074 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI TAMBAKROMO", "Y": -7.929238868, "X": 110.764957 }, "geometry": { "type": "Point", "coordinates": [ 110.764957, -7.929238868 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSN 2 GUNUNGKIDUL", "Y": -7.961931344, "X": 110.7244477 }, "geometry": { "type": "Point", "coordinates": [ 110.7244477, -7.961931344 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTS MUHAMMADIYAH PONJONG", "Y": -7.984360702, "X": 110.7136041 }, "geometry": { "type": "Point", "coordinates": [ 110.7136041, -7.984360702 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSS YAPPI KENTENG", "Y": -7.990469904, "X": 110.7530907 }, "geometry": { "type": "Point", "coordinates": [ 110.7530907, -7.990469904 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD BAITUL QURAN PONJONG", "Y": null, "X": null }, "geometry": null },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH BEDOYO PONJONG", "Y": -8.014525926, "X": 110.7252156 }, "geometry": { "type": "Point", "coordinates": [ 110.7252156, -8.014525926 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH KUWON PONJONG", "Y": -7.987871878, "X": 110.7170454 }, "geometry": { "type": "Point", "coordinates": [ 110.7170454, -7.987871878 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH WONODOYO PONJONG", "Y": -7.95646106, "X": 110.7232864 }, "geometry": { "type": "Point", "coordinates": [ 110.7232864, -7.95646106 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN ASEMLULANG PONJONG", "Y": -7.97974069, "X": 110.6889069 }, "geometry": { "type": "Point", "coordinates": [ 110.6889069, -7.97974069 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BEDOYO PONJONG", "Y": -8.017683169, "X": 110.7418753 }, "geometry": { "type": "Point", "coordinates": [ 110.7418753, -8.017683169 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GENJAHAN BARU PONJONG", "Y": -7.954122745, "X": 110.714349 }, "geometry": { "type": "Point", "coordinates": [ 110.714349, -7.954122745 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GENJAHAN II PONJONG", "Y": -7.965359799, "X": 110.7040351 }, "geometry": { "type": "Point", "coordinates": [ 110.7040351, -7.965359799 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GOMBANG I PONJONG", "Y": -8.015350917, "X": 110.6906063 }, "geometry": { "type": "Point", "coordinates": [ 110.6906063, -8.015350917 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GOMBANG II PONJONG", "Y": -8.020362881, "X": 110.7029412 }, "geometry": { "type": "Point", "coordinates": [ 110.7029412, -8.020362881 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN JATISARI PONJONG", "Y": -7.91596835, "X": 110.7481566 }, "geometry": { "type": "Point", "coordinates": [ 110.7481566, -7.91596835 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGASEM PONJONG", "Y": -8.003393488, "X": 110.7532412 }, "geometry": { "type": "Point", "coordinates": [ 110.7532412, -8.003393488 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KENTENG I PONJONG", "Y": -7.987587352, "X": 110.752658 }, "geometry": { "type": "Point", "coordinates": [ 110.752658, -7.987587352 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KENTENG II PONJONG", "Y": -7.985951003, "X": 110.7623545 }, "geometry": { "type": "Point", "coordinates": [ 110.7623545, -7.985951003 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KLUMPIT PONJONG", "Y": -7.963925898, "X": 110.7503722 }, "geometry": { "type": "Point", "coordinates": [ 110.7503722, -7.963925898 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN MENDAK PONJONG", "Y": -7.980410387, "X": 110.7381853 }, "geometry": { "type": "Point", "coordinates": [ 110.7381853, -7.980410387 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGABEAN PONJONG", "Y": -7.998321932, "X": 110.739281 }, "geometry": { "type": "Point", "coordinates": [ 110.739281, -7.998321932 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NONGKOSEPET PONJONG", "Y": -8.012117211, "X": 110.7130492 }, "geometry": { "type": "Point", "coordinates": [ 110.7130492, -8.012117211 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PONJONG I PONJONG", "Y": -7.976757473, "X": 110.7101835 }, "geometry": { "type": "Point", "coordinates": [ 110.7101835, -7.976757473 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PONJONG II PONJONG", "Y": -7.971640301, "X": 110.7137867 }, "geometry": { "type": "Point", "coordinates": [ 110.7137867, -7.971640301 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PONJONG III PONJONG", "Y": -7.969645825, "X": 110.7142924 }, "geometry": { "type": "Point", "coordinates": [ 110.7142924, -7.969645825 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PONJONG IV PONJONG", "Y": -7.984019824, "X": 110.7134683 }, "geometry": { "type": "Point", "coordinates": [ 110.7134683, -7.984019824 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SAWAHAN PONJONG", "Y": -7.926285196, "X": 110.7412941 }, "geometry": { "type": "Point", "coordinates": [ 110.7412941, -7.926285196 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SAWUR PONJONG", "Y": -7.910757643, "X": 110.7526426 }, "geometry": { "type": "Point", "coordinates": [ 110.7526426, -7.910757643 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SENDANG PONJONG", "Y": -7.939830626, "X": 110.7401776 }, "geometry": { "type": "Point", "coordinates": [ 110.7401776, -7.939830626 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SUMBERGIRI PONJONG", "Y": -7.966782398, "X": 110.7223008 }, "geometry": { "type": "Point", "coordinates": [ 110.7223008, -7.966782398 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SUNGGINGAN PONJONG", "Y": -7.92717458, "X": 110.7136971 }, "geometry": { "type": "Point", "coordinates": [ 110.7136971, -7.92717458 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SURODADI I PONJONG", "Y": -7.911198441, "X": 110.7169224 }, "geometry": { "type": "Point", "coordinates": [ 110.7169224, -7.911198441 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SURODADI II PONJONG", "Y": -7.91354824, "X": 110.712747 }, "geometry": { "type": "Point", "coordinates": [ 110.712747, -7.91354824 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SURUBENDO PONJONG", "Y": -8.031340124, "X": 110.7466297 }, "geometry": { "type": "Point", "coordinates": [ 110.7466297, -8.031340124 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TAMBAKROMO I PONJONG", "Y": -7.94233283, "X": 110.7647795 }, "geometry": { "type": "Point", "coordinates": [ 110.7647795, -7.94233283 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TAMBAKROMO II PONJONG", "Y": -7.932070559, "X": 110.7613649 }, "geometry": { "type": "Point", "coordinates": [ 110.7613649, -7.932070559 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TAMBAKROMO III PONJONG", "Y": -7.940321743, "X": 110.7702964 }, "geometry": { "type": "Point", "coordinates": [ 110.7702964, -7.940321743 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TEGALREJO BARU PONJONG", "Y": -7.987902177, "X": 110.7042173 }, "geometry": { "type": "Point", "coordinates": [ 110.7042173, -7.987902177 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TEGALREJO PONJONG", "Y": -7.986024513, "X": 110.6930685 }, "geometry": { "type": "Point", "coordinates": [ 110.6930685, -7.986024513 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TRENGGUNO PONJONG", "Y": -7.998026428, "X": 110.6977499 }, "geometry": { "type": "Point", "coordinates": [ 110.6977499, -7.998026428 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN UMBULREJO PONJONG", "Y": -7.951678783, "X": 110.7181679 }, "geometry": { "type": "Point", "coordinates": [ 110.7181679, -7.951678783 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP BAITUL QURAN PONJONG", "Y": -7.976565063, "X": 110.7079707 }, "geometry": { "type": "Point", "coordinates": [ 110.7079707, -7.976565063 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP MUHAMMADIYAH PONJONG", "Y": -7.965061951, "X": 110.7056167 }, "geometry": { "type": "Point", "coordinates": [ 110.7056167, -7.965061951 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 1 PONJONG", "Y": -7.976709369, "X": 110.7081512 }, "geometry": { "type": "Point", "coordinates": [ 110.7081512, -7.976709369 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 2 PONJONG", "Y": -8.01779033, "X": 110.7429824 }, "geometry": { "type": "Point", "coordinates": [ 110.7429824, -8.01779033 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 3 PONJONG", "Y": -7.927274809, "X": 110.7437717 }, "geometry": { "type": "Point", "coordinates": [ 110.7437717, -7.927274809 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 4 PONJONG", "Y": -7.928390573, "X": 110.7142381 }, "geometry": { "type": "Point", "coordinates": [ 110.7142381, -7.928390573 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP PEMBANGUNAN PONJONG", "Y": -7.994316786, "X": 110.6843298 }, "geometry": { "type": "Point", "coordinates": [ 110.6843298, -7.994316786 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP PERSATUAN PONJONG", "Y": -7.970386308, "X": 110.7143615 }, "geometry": { "type": "Point", "coordinates": [ 110.7143615, -7.970386308 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP TAMAN DEWASA TAMBAKROMO", "Y": -7.942049809, "X": 110.7675985 }, "geometry": { "type": "Point", "coordinates": [ 110.7675985, -7.942049809 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SLB Muhammadiyah Ponjong", "Y": -7.9803704, "X": 110.7173718 }, "geometry": { "type": "Point", "coordinates": [ 110.7173718, -7.9803704 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMA BAITUL QUR`AN YOGYAKARTA", "Y": -7.976593317, "X": 110.7074654 }, "geometry": { "type": "Point", "coordinates": [ 110.7074654, -7.976593317 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMA IKIP VETERAN III TAMBAKROMO", "Y": -7.939362506, "X": 110.7706887 }, "geometry": { "type": "Point", "coordinates": [ 110.7706887, -7.939362506 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMU MUHAMMADIYAH PONJONG", "Y": -7.969880072, "X": 110.7169028 }, "geometry": { "type": "Point", "coordinates": [ 110.7169028, -7.969880072 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMA PEMBANGUNAN 3 PONJONG", "Y": -7.966531049, "X": 110.721253 }, "geometry": { "type": "Point", "coordinates": [ 110.721253, -7.966531049 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK MAARIF PONJONG", "Y": -7.966588872, "X": 110.721168 }, "geometry": { "type": "Point", "coordinates": [ 110.721168, -7.966588872 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK MUHAMMADIYAH PONJONG", "Y": -7.970621585, "X": 110.7175478 }, "geometry": { "type": "Point", "coordinates": [ 110.7175478, -7.970621585 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMKN 1 PONJONG", "Y": -8.015817073, "X": 110.7350637 }, "geometry": { "type": "Point", "coordinates": [ 110.7350637, -8.015817073 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GIRIASIH PURWOSARI", "Y": -7.994705, "X": 110.3623775 }, "geometry": { "type": "Point", "coordinates": [ 110.3623775, -7.994705 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GIRICAHYO PURWOSARI", "Y": -8.0294252, "X": 110.3656263 }, "geometry": { "type": "Point", "coordinates": [ 110.3656263, -8.0294252 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GIRIPURWO PURWOSARI", "Y": -8.0251175, "X": 110.4035118 }, "geometry": { "type": "Point", "coordinates": [ 110.4035118, -8.0251175 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GIRITIRTO PURWOSARI", "Y": -7.9941826, "X": 110.371637 }, "geometry": { "type": "Point", "coordinates": [ 110.371637, -7.9941826 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGNONGKO I PURWOSARI", "Y": -8.03208, "X": 110.3968482 }, "geometry": { "type": "Point", "coordinates": [ 110.3968482, -8.03208 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGNONGKO II PURWOSARI", "Y": -8.027144, "X": 110.3576951 }, "geometry": { "type": "Point", "coordinates": [ 110.3576951, -8.027144 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGNONGKO III PURWOSARI", "Y": -8.0303434, "X": 110.4001899 }, "geometry": { "type": "Point", "coordinates": [ 110.4001899, -8.0303434 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGTENGAH I PURWOSARI", "Y": -8.0246099, "X": 110.3554828 }, "geometry": { "type": "Point", "coordinates": [ 110.3554828, -8.0246099 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGTENGAH II PURWOSARI", "Y": -8.0301786, "X": 110.3621914 }, "geometry": { "type": "Point", "coordinates": [ 110.3621914, -8.0301786 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KLAMPOK PURWOSARI", "Y": -8.0351565, "X": 110.4075198 }, "geometry": { "type": "Point", "coordinates": [ 110.4075198, -8.0351565 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NANAS PURWOSARI", "Y": -8.0031247, "X": 110.3424451 }, "geometry": { "type": "Point", "coordinates": [ 110.3424451, -8.0031247 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PETOYAN I PURWOSARI", "Y": -7.9989259, "X": 110.3797482 }, "geometry": { "type": "Point", "coordinates": [ 110.3797482, -7.9989259 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PETOYAN II PURWOSARI", "Y": -7.9972907, "X": 110.3787712 }, "geometry": { "type": "Point", "coordinates": [ 110.3787712, -7.9972907 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 2 PURWOSARI", "Y": -8.0019811, "X": 110.3424793 }, "geometry": { "type": "Point", "coordinates": [ 110.3424793, -8.0019811 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SLB PURWO RAHARJO", "Y": -7.9938588, "X": 110.3718297 }, "geometry": { "type": "Point", "coordinates": [ 110.3718297, -7.9938588 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMKN 1 PURWOSARI", "Y": -8.0248355, "X": 110.4028182 }, "geometry": { "type": "Point", "coordinates": [ 110.4028182, -8.0248355 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIN 2 GUNUNGKIDUL", "Y": -8.094482, "X": 110.7739656 }, "geometry": { "type": "Point", "coordinates": [ 110.7739656, -8.094482 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSN 9 GUNUNGKIDUL", "Y": -8.1090942, "X": 110.7582692 }, "geometry": { "type": "Point", "coordinates": [ 110.7582692, -8.1090942 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH DAWUNG RONGKOP", "Y": -8.0822862, "X": 110.7549706 }, "geometry": { "type": "Point", "coordinates": [ 110.7549706, -8.0822862 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH GEBANG RONGKOP", "Y": -8.10591, "X": 110.77581 }, "geometry": { "type": "Point", "coordinates": [ 110.77581, -8.10591 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BANOMBO RONGKOP", "Y": -8.043671, "X": 110.7354001 }, "geometry": { "type": "Point", "coordinates": [ 110.7354001, -8.043671 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BARAN I RONGKOP", "Y": -8.0847861, "X": 110.7715863 }, "geometry": { "type": "Point", "coordinates": [ 110.7715863, -8.0847861 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BARAN II RONGKOP", "Y": -8.0868856, "X": 110.761808 }, "geometry": { "type": "Point", "coordinates": [ 110.761808, -8.0868856 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BOHOL RONGKOP", "Y": -8.1350913, "X": 110.7474827 }, "geometry": { "type": "Point", "coordinates": [ 110.7474827, -8.1350913 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BOTODAYAKAN RONGKOP", "Y": -8.1344337, "X": 110.7235378 }, "geometry": { "type": "Point", "coordinates": [ 110.7235378, -8.1344337 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN CABE RONGKOP", "Y": -8.10054, "X": 110.7237473 }, "geometry": { "type": "Point", "coordinates": [ 110.7237473, -8.10054 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGWUNI I RONGKOP", "Y": -8.0439133, "X": 110.7530119 }, "geometry": { "type": "Point", "coordinates": [ 110.7530119, -8.0439133 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGWUNI II RONGKOP", "Y": -8.0588299, "X": 110.7679012 }, "geometry": { "type": "Point", "coordinates": [ 110.7679012, -8.0588299 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KENDAL RONGKOP", "Y": -8.0439133, "X": 110.7530119 }, "geometry": { "type": "Point", "coordinates": [ 110.7530119, -8.0439133 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KENTENG RONGKOP", "Y": -8.11424, "X": 110.72416 }, "geometry": { "type": "Point", "coordinates": [ 110.72416, -8.11424 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KERDONMIRI I RONGKOP", "Y": -8.0766209, "X": 110.7635818 }, "geometry": { "type": "Point", "coordinates": [ 110.7635818, -8.0766209 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KERDONMIRI II RONGKOP", "Y": -8.0672055, "X": 110.7492179 }, "geometry": { "type": "Point", "coordinates": [ 110.7492179, -8.0672055 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KROPAK RONGKOP", "Y": -8.0672055, "X": 110.7492179 }, "geometry": { "type": "Point", "coordinates": [ 110.7492179, -8.0672055 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN MELIKAN RONGKOP", "Y": -8.1170402, "X": 110.78099 }, "geometry": { "type": "Point", "coordinates": [ 110.78099, -8.1170402 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PAKEL I RONGKOP", "Y": -8.1091278, "X": 110.7575718 }, "geometry": { "type": "Point", "coordinates": [ 110.7575718, -8.1091278 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PAKEL II RONGKOP", "Y": -8.1225, "X": 110.73498 }, "geometry": { "type": "Point", "coordinates": [ 110.73498, -8.1225 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PETIR I RONGKOP", "Y": -8.0795429, "X": 110.7239489 }, "geometry": { "type": "Point", "coordinates": [ 110.7239489, -8.0795429 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PETIR II RONGKOP", "Y": -8.0935746, "X": 110.7356088 }, "geometry": { "type": "Point", "coordinates": [ 110.7356088, -8.0935746 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PUCANGANOM I RONGKOP", "Y": -8.0494535, "X": 110.7410733 }, "geometry": { "type": "Point", "coordinates": [ 110.7410733, -8.0494535 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PUCANGANOM II RONGKOP", "Y": -8.0549937, "X": 110.72038 }, "geometry": { "type": "Point", "coordinates": [ 110.72038, -8.0549937 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN YUYANG RONGKOP", "Y": -8.12087, "X": 110.71439 }, "geometry": { "type": "Point", "coordinates": [ 110.71439, -8.12087 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP MUHAMMADIYAH RONGKOP", "Y": -8.12087, "X": 110.71439 }, "geometry": { "type": "Point", "coordinates": [ 110.71439, -8.12087 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 1 RONGKOP", "Y": -8.0795014, "X": 110.7634884 }, "geometry": { "type": "Point", "coordinates": [ 110.7634884, -8.0795014 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 2 RONGKOP", "Y": -8.1158451, "X": 110.7146436 }, "geometry": { "type": "Point", "coordinates": [ 110.7146436, -8.1158451 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SLB KRIDA MULIA 1", "Y": -8.0859224, "X": 110.764625 }, "geometry": { "type": "Point", "coordinates": [ 110.764625, -8.0859224 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMAN 1 RONGKOP", "Y": -8.0660529, "X": 110.7578215 }, "geometry": { "type": "Point", "coordinates": [ 110.7578215, -8.0660529 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK BHINA KARYA RONGKOP", "Y": -8.0821419, "X": 110.763328 }, "geometry": { "type": "Point", "coordinates": [ 110.763328, -8.0821419 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK MUHAMMADIYAH RONGKOP", "Y": -8.0762288, "X": 110.7633019 }, "geometry": { "type": "Point", "coordinates": [ 110.7633019, -8.0762288 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIN 10 GUNUNGKIDUL", "Y": -8.06414, "X": 110.4958206, }, "geometry": { "type": "Point", "coordinates": [ 110.4958206, -8.06414 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS GUPPI LEGUNDI", "Y": -8.0695781, "X": 110.5316597 }, "geometry": { "type": "Point", "coordinates": [ 110.5316597, -8.0695781 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS GUPPI MONGGOL", "Y": -8.0375869, "X": 110.5358092  }, "geometry": { "type": "Point", "coordinates": [ 110.5358092, -8.0375869 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS GUPPI PAKEL", "Y": -8.0694411, "X": 110.5273439  }, "geometry": { "type": "Point", "coordinates": [ 110.5273439, -8.0694411 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI CEKEL", "Y": -8.0345694, "X": 110.4810705  }, "geometry": { "type": "Point", "coordinates": [ 110.4810705, -8.0345694 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI DONDONG", "Y": -8.0469461, "X": 110.4780104  }, "geometry": { "type": "Point", "coordinates": [ 110.4780104, -8.0469461 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI KARANG","Y": -7.9555926, "X": 110.6258874  }, "geometry": { "type": "Point", "coordinates": [ 110.6258874, -7.9555926 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSS MUHAMMADIYAH MONGGOL", "Y": -8.0491914, "X": 110.5292534 }, "geometry": { "type": "Point", "coordinates": [ 110.5292534, -8.0491914 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSS YAPPI JETIS SAPTOSARI", "Y": -8.0364603, "X": 110.4867771 }, "geometry": { "type": "Point", "coordinates": [ 110.4867771, -8.0364603 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD BOPKRI PLANJAN SAPTOSARI", "Y": -8.0948476, "X": 110.5453224 }, "geometry": { "type": "Point", "coordinates": [ 110.5453224, -8.0948476 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD IT AL ITISHAM SAPTOSARI", "Y": -8.0937595, "X": 110.541283  }, "geometry": { "type": "Point", "coordinates": [ 110.541283, -8.0937595 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BIBIS SAPTOSARI", "Y": -8.0832586, "X": 110.4875828 }, "geometry": { "type": "Point", "coordinates": [ 110.4875828, -8.0832586 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GEDANGKLUTUK SAPTOSARI", "Y": -8.09373, "X": 110.53059 }, "geometry": { "type": "Point", "coordinates": [ 110.53059, -8.09373 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN JETIS I SAPTOSARI", "Y": -8.0407815, "X": 110.4898501  }, "geometry": { "type": "Point", "coordinates": [ 110.4898501, -8.0407815 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN JETIS II SAPTOSARI", "Y": -8.0407815, "X": 110.4898501  }, "geometry": { "type": "Point", "coordinates": [ 110.4898501, -8.0407815 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KANIGORO I SAPTOSARI", "Y": -8.0890224, "X": 110.5216345  }, "geometry": { "type": "Point", "coordinates": [ 110.5216345, -8.0890224 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KANIGORO II SAPTOSARI", "Y": -8.095011, "X": 110.5047432 }, "geometry": { "type": "Point", "coordinates": [ 110.5047432, -8.095011 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KEPEK I SAPTOSARI", "Y": -8.0540479, "X": 110.5140867  }, "geometry": { "type": "Point", "coordinates": [ 110.5140867, -8.0540479 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KEPEK II SAPTOSARI", "Y": -8.0525133, "X": 110.5097104  }, "geometry": { "type": "Point", "coordinates": [ 110.5097104, -8.0525133 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KRAMBILSAWIT SAPTOSARI","Y": -8.073681, "X": 110.471692  }, "geometry": { "type": "Point", "coordinates": [ 110.471692, -8.073681 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN MONGGOL I SAPTOSARI", "Y": -8.0472948, "X": 110.5393196 }, "geometry": { "type": "Point", "coordinates": [ 110.5393196, -8.0472948 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN MONGGOL II SAPTOSARI","Y": -8.0472948, "X": 110.5393196  }, "geometry": { "type": "Point", "coordinates": [ 110.5393196, -8.0472948 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGLORO SAPTOSARI","Y": -8.0521285, "X": 110.4884598  }, "geometry": { "type": "Point", "coordinates": [ 110.4884598, -8.0521285 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PLANJAN I SAPTOSARI","Y": -8.0931099, "X": 110.5532913  }, "geometry": { "type": "Point", "coordinates": [ 110.5532913, -8.0931099 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PLANJAN II SAPTOSARI", "Y": -8.0931099, "X": 110.5532913  }, "geometry": { "type": "Point", "coordinates": [ 110.5532913, -8.0931099 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PUCUNG SAPTOSARI", "Y": -8.0831626, "X": 110.5188143  }, "geometry": { "type": "Point", "coordinates": [ 110.5188143, -8.0831626 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SAWAH SAPTOSARI", "Y": -8.0705717, "X": 110.4730764  }, "geometry": { "type": "Point", "coordinates": [ 110.4730764, -8.0705717 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TROWONO II SAPTOSARI", "Y": -8.0573273, "X": 110.5117039  }, "geometry": { "type": "Point", "coordinates": [ 110.5117039, -8.0573273 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TROWONO III SAPTOSARI", "Y": -8.0522176, "X": 110.5346539  }, "geometry": { "type": "Point", "coordinates": [ 110.5346539, -8.0522176 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP MUHAMMADIYAH SAPTOSARI", "Y": -8.0526675, "X": 110.4888337  }, "geometry": { "type": "Point", "coordinates": [ 110.4888337, -8.0526675 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 1 SAPTOSARI", "Y": -8.0468007, "X": 110.51224  }, "geometry": { "type": "Point", "coordinates": [ 110.51224, -8.0468007 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 2 SAPTOSARI", "Y": -8.0819421, "X": 110.4857751  }, "geometry": { "type": "Point", "coordinates": [ 110.4857751, -8.0819421 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 3 SAPTOSARI", "Y": -8.0949038, "X": 110.5272747  }, "geometry": { "type": "Point", "coordinates": [ 110.5272747, -8.0949038 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP PGRI SAPTOSARI", "Y": -8.0525262, "X": 110.5195325  }, "geometry": { "type": "Point", "coordinates": [ 110.5195325, -8.0525262 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMKN 1 SAPTOSARI", "Y": -8.0474814, "X": 110.5106428  }, "geometry": { "type": "Point", "coordinates": [ 110.5106428, -8.0474814 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIN 8 GUNUNGKIDUL","X": -8.0003816, "Y": 110.6593505  }, "geometry": { "type": "Point", "coordinates": [ 110.6593505, -8.0003816 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS MUHAMMADIYAH MUNGGUR", "X": -7.9825611, "Y": 110.6759855 }, "geometry": { "type": "Point", "coordinates": [ 110.6759855, -7.9825611 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS MUHAMMADIYAH SEMANU", "X": -8.0002523, "Y": 110.6481413  }, "geometry": { "type": "Point", "coordinates": [ 110.6481413, -8.0002523 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI PEYUYON", "X": -8.0002523, "Y": 110.6131224 }, "geometry": { "type": "Point", "coordinates": [ 110.6131224, -8.0002523 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI SENDANG", "X": -8.0570197, "Y": 110.7184635 }, "geometry": { "type": "Point", "coordinates": [ 110.7184635, -8.0570197 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSN 3 GUNUNGKIDUL","X": -8.0000825, "Y": 110.6504452 }, "geometry": { "type": "Point", "coordinates": [ 110.6504452, -8.0000825 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSS MUHAMMADIYAH SEMANU", "X": -7.9839656, "Y": 110.6486899  }, "geometry": { "type": "Point", "coordinates": [ 110.6486899, -7.9839656 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN CUWELO I SEMANU", "X": -8.0718589, "Y": 110.6738825  }, "geometry": { "type": "Point", "coordinates": [ 110.6738825, -8.0718589 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN CUWELO II SEMANU","X": -8.0714019, "Y": 110.6774286  }, "geometry": { "type": "Point", "coordinates": [ 110.6774286, -8.0714019 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN DADAPAYU I SEMANU", "X": -8.0577055, "Y": 110.7028883 }, "geometry": { "type": "Point", "coordinates": [ 110.7028883, -8.0577055 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN DADAPAYU II SEMANU", "X": -8.0714019, "Y": 110.6774286  }, "geometry": { "type": "Point", "coordinates": [ 110.6774286, -8.0714019 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN DAYAKAN II SEMANU","X": -8.0602843, "Y": 110.6544484 }, "geometry": { "type": "Point", "coordinates": [ 110.6544484, -8.0602843 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN DENGOK SEMANU","X": -8.0064463, "Y": 110.6215739 }, "geometry": { "type": "Point", "coordinates": [ 110.6215739, -8.0064463 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GUNUNGKUNIR I SEMANU","X": -8.0623544, "Y": 110.6537196 }, "geometry": { "type": "Point", "coordinates": [ 110.6537196, -8.0623544 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GUNUNGKUNIR II SEMANU", "X": -8.0064822, "Y": 110.6215712 }, "geometry": { "type": "Point", "coordinates": [ 110.6215712, -8.0064822 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GUNUNGSARI SEMANU", "X": -7.9942107, "Y": 110.6781988  }, "geometry": { "type": "Point", "coordinates": [ 110.6781988, -7.9942107 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN JASEM SEMANU","X": -8.0127318, "Y": 110.6186101 }, "geometry": { "type": "Point", "coordinates": [ 110.6186101, -8.0127318 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN JATI SEMANU", "X": -8.08561, "Y": 110.70259  }, "geometry": { "type": "Point", "coordinates": [ 110.70259, -8.08561 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN JETIS SEMANU", "X": -7.9930876, "Y": 110.6501564  }, "geometry": { "type": "Point", "coordinates": [ 110.6501564, -7.9930876 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN JRAGUM SEMANU","X": -8.0164466, "Y": 110.6645916 }, "geometry": { "type": "Point", "coordinates": [ 110.6645916, -8.0164466 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KUWON SEMANU","X": -8.01755, "Y": 110.6195723 }, "geometry": { "type": "Point", "coordinates": [ 110.6195723, -8.01755 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KWANGEN SEMANU", "X": -8.01755, "Y": 110.6195723  }, "geometry": { "type": "Point", "coordinates": [ 110.6195723, -8.01755 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN MIJAHAN I SEMANU", "X": -8.0175945, "Y": 110.6273548 }, "geometry": { "type": "Point", "coordinates": [ 110.6273548, -8.0175945 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN MIJAHAN II SEMANU","X": -8.00549, "Y": 110.62789 }, "geometry": { "type": "Point", "coordinates": [ 110.62789, -8.00549 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGENEP SEMANU","X": -8.06316, "Y": 110.70498 }, "geometry": { "type": "Point", "coordinates": [ 110.70498, -8.06316 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGEPOSARI II SEMANU","X": -8.0073332, "Y": 110.6738666  }, "geometry": { "type": "Point", "coordinates": [ 110.6738666, -8.0073332 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGEPOSARI SEMANU", "X": -7.9991553, "Y": 110.6715923  }, "geometry": { "type": "Point", "coordinates": [ 110.6715923, -7.9991553 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NITIKAN SEMANU", "X": -7.9990675, "Y": 110.6628491  }, "geometry": { "type": "Point", "coordinates": [ 110.6628491, -7.9990675 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PACAREJO II SEMANU", "X": -8.0072274, "Y": 110.5976331  }, "geometry": { "type": "Point", "coordinates": [ 110.5976331, -8.0072274 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PLEBENGAN SEMANU", "X": -8.0482494, "Y": 110.66873 }, "geometry": { "type": "Point", "coordinates": [ 110.66873, -8.0482494 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PRAGAK SEMANU","X": -7.98617, "Y": 110.64514 }, "geometry": { "type": "Point", "coordinates": [ 110.64514, -7.98617 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SEMANU III SEMANU", "X": -7.9989546, "Y": 110.6538665 }, "geometry": { "type": "Point", "coordinates": [ 110.6538665, -7.9989546 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SEMANU IV SEMANU","X": -8.0182009, "Y": 110.6442 }, "geometry": { "type": "Point", "coordinates": [ 110.6442, -8.0182009 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SEMANU SEMANU","X": -8.000263, "Y": 110.6516034  }, "geometry": { "type": "Point", "coordinates": [ 110.6516034, -8.000263 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SREPENG SEMANU", "X": -8.01578, "Y": 110.6051 }, "geometry": { "type": "Point", "coordinates": [ 110.6051, -8.01578 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TUNGGAKNONGKO SEMANU","X": -7.9932915, "Y": 110.6650596 }, "geometry": { "type": "Point", "coordinates": [ 110.6650596, -7.9932915 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN WEDIWUTAH SEMANU" , "X": -8.0202338, "Y": 110.665195}, "geometry": { "type": "Point", "coordinates": [ 110.665195, -8.0202338 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP MUHAMMADIYAH SEMANU","X": -8.0594069, "Y": 110.7045001 }, "geometry": { "type": "Point", "coordinates": [ 110.7045001, -8.0594069 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 1 SEMANU","X": -8.0013494, "Y": 110.6482763 }, "geometry": { "type": "Point", "coordinates": [ 110.6482763, -8.0013494 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 2 SEMANU", "X": -8.0585233, "Y": 110.6530868 }, "geometry": { "type": "Point", "coordinates": [ 110.6530868, -8.0585233 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 3 SEMANU", "X": -8.0120269, "Y": 110.6246225  }, "geometry": { "type": "Point", "coordinates": [ 110.6246225, -8.0120269 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP PERSIAPAN SEMANU", "X": -8.0004899, "Y": 110.66245 }, "geometry": { "type": "Point", "coordinates": [ 110.66245, -8.0004899 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MA THORIQUL MUKMININ MUHAMMADIYAH", "X": -7.9838727, "Y": 110.6487273 }, "geometry": { "type": "Point", "coordinates": [ 110.6487273, -7.9838727 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SLB KRIDA MULIA III","X": -7.9979855, "Y": 110.679342 }, "geometry": { "type": "Point", "coordinates": [ 110.679342, -7.9979855 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMAN 1 SEMANU","X": -8.0099574, "Y": 110.6455297 }, "geometry": { "type": "Point", "coordinates": [ 110.6455297, -8.0099574 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK MAARIF SEMANU", "X": -8.00137, "Y": 110.66253 }, "geometry": { "type": "Point", "coordinates": [ 110.66253, -8.00137 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIN 3 GUNUNGKIDUL", "Y": -7.8321724, "X": 110.7161912 }, "geometry": { "type": "Point", "coordinates": [ 110.7161912, -7.8321724 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS AL JAUHAR", "Y": -7.8842808, "X": 110.7176133 }, "geometry": { "type": "Point", "coordinates": [ 110.7176133, -7.8842808 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS MUHAMMADIYAH BLEMBEM", "Y": -7.8321441, "X": 110.7629663 }, "geometry": { "type": "Point", "coordinates": [ 110.7629663, -7.8321441 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI BADONGAN", "Y": -7.8597401, "X": 110.778283 }, "geometry": { "type": "Point", "coordinates": [ 110.778283, -7.8597401 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI KARANG WETAN", "Y": -7.8658748, "X": 110.7449625 }, "geometry": { "type": "Point", "coordinates": [ 110.7449625, -7.8658748 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI KARANGPILANG", "Y": -7.8257648, "X": 110.779667 }, "geometry": { "type": "Point", "coordinates": [ 110.779667, -7.8257648 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI KLEPU", "Y": -7.8460267, "X": 110.7771538 }, "geometry": { "type": "Point", "coordinates": [ 110.7771538, -7.8460267 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI PUCUNG", "Y": -7.8385406, "X": 110.7522151 }, "geometry": { "type": "Point", "coordinates": [ 110.7522151, -7.8385406 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI PURWO", "Y": -7.8798216, "X": 110.764124 }, "geometry": { "type": "Point", "coordinates": [ 110.764124, -7.8798216 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTsS AL JAUHAR", "Y": -7.8854834, "X": 110.648661 }, "geometry": { "type": "Point", "coordinates": [ 110.648661, -7.8854834 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSS GUPPI SEMIN", "Y": -7.8578147, "X": 110.7703351 }, "geometry": { "type": "Point", "coordinates": [ 110.7703351, -7.8578147 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD IT DIAN INSANI SEMIN", "Y": -7.8287862, "X": 110.7236645 }, "geometry": { "type": "Point", "coordinates": [ 110.7236645, -7.8287862 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH KUTUGAN SEMIN", "Y": -7.8940947, "X": 110.7604351 }, "geometry": { "type": "Point", "coordinates": [ 110.7604351, -7.8940947 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH LEMAHBANG SEMIN", "Y": -7.8121915, "X": 110.7720559 }, "geometry": { "type": "Point", "coordinates": [ 110.7720559, -7.8121915 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH SIDOREJO SEMIN", "Y": -7.8878646, "X": 110.7200854 }, "geometry": { "type": "Point", "coordinates": [ 110.7200854, -7.8878646 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH WIDORO SEMIN", "Y": -7.8548356, "X": 110.7183739 }, "geometry": { "type": "Point", "coordinates": [ 110.7183739, -7.8548356 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BENDUNG I SEMIN", "Y": -7.8612976, "X": 110.7221832 }, "geometry": { "type": "Point", "coordinates": [ 110.7221832, -7.8612976 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BENDUNG II SEMIN", "Y": -7.8391247, "X": 110.7098451 }, "geometry": { "type": "Point", "coordinates": [ 110.7098451, -7.8391247 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BULUREJO I SEMIN", "Y": -7.8845724, "X": 110.7266032 }, "geometry": { "type": "Point", "coordinates": [ 110.7266032, -7.8845724 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BULUREJO II SEMIN", "Y": -7.8609595, "X": 110.7248726 }, "geometry": { "type": "Point", "coordinates": [ 110.7248726, -7.8609595 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN CANDIREJO I SEMIN", "Y": -7.8272176, "X": 110.7511575 }, "geometry": { "type": "Point", "coordinates": [ 110.7511575, -7.8272176 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGSARI SEMIN", "Y": -7.8682809, "X": 110.77075 }, "geometry": { "type": "Point", "coordinates": [ 110.77075, -7.8682809 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KERINGAN SEMIN", "Y": -7.8575047, "X": 110.7378751 }, "geometry": { "type": "Point", "coordinates": [ 110.7378751, -7.8575047 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN LOGANTUNG I SEMIN", "Y": -7.8330966, "X": 110.7238748 }, "geometry": { "type": "Point", "coordinates": [ 110.7238748, -7.8330966 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN LOGANTUNG II SEMIN", "Y": -7.8384889, "X": 110.7446477 }, "geometry": { "type": "Point", "coordinates": [ 110.7446477, -7.8384889 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGADIPIRO SEMIN", "Y": -7.8583196, "X": 110.7704691 }, "geometry": { "type": "Point", "coordinates": [ 110.7704691, -7.8583196 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGEPOH SEMIN", "Y": -7.8936447, "X": 110.7365051 }, "geometry": { "type": "Point", "coordinates": [ 110.7365051, -7.8936447 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PAYAMAN II SEMIN", "Y": -7.8673119, "X": 110.7563065 }, "geometry": { "type": "Point", "coordinates": [ 110.7563065, -7.8673119 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PREBUTAN SEMIN", "Y": -7.8822858, "X": 110.7124338 }, "geometry": { "type": "Point", "coordinates": [ 110.7124338, -7.8822858 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN REJOSARI II SEMIN", "Y": -7.8387594, "X": 110.7800777 }, "geometry": { "type": "Point", "coordinates": [ 110.7800777, -7.8387594 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN REJOSARI III SEMIN", "Y": -7.8625657, "X": 110.7508086 }, "geometry": { "type": "Point", "coordinates": [ 110.7508086, -7.8625657 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SEDONO SEMIN", "Y": -7.8844509, "X": 110.7413272 }, "geometry": { "type": "Point", "coordinates": [ 110.7413272, -7.8844509 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SEMIN I SEMIN", "Y": -7.8844025, "X": 110.7233024 }, "geometry": { "type": "Point", "coordinates": [ 110.7233024, -7.8844025 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SEMIN II SEMIN", "Y": -7.8666419, "X": 110.7346623 }, "geometry": { "type": "Point", "coordinates": [ 110.7346623, -7.8666419 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SEMIN III SEMIN", "Y": -7.8666312, "X": 110.7346623 }, "geometry": { "type": "Point", "coordinates": [ 110.7346623, -7.8666312 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SUMBER SEMIN", "Y": -7.8358947, "X": 110.7573551 }, "geometry": { "type": "Point", "coordinates": [ 110.7573551, -7.8358947 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SUMBEREJO SEMIN", "Y": -7.8638281, "X": 110.6673915 }, "geometry": { "type": "Point", "coordinates": [ 110.6673915, -7.8638281 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TAMBRAN I SEMIN", "Y": -7.8639365, "X": 110.6982916 }, "geometry": { "type": "Point", "coordinates": [ 110.6982916, -7.8639365 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TAMBRAN II SEMIN", "Y": -7.8639632, "X": 110.7060165 }, "geometry": { "type": "Point", "coordinates": [ 110.7060165, -7.8639632 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN WIDORO SEMIN", "Y": -7.8437553, "X": 110.7305082 }, "geometry": { "type": "Point", "coordinates": [ 110.7305082, -7.8437553 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP BOPKRI SEMIN", "Y": -7.8664138, "X": 110.7316005 }, "geometry": { "type": "Point", "coordinates": [ 110.7316005, -7.8664138 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP GOTONG ROYONG SEMIN", "Y": -7.8659524, "X": 110.7359252 }, "geometry": { "type": "Point", "coordinates": [ 110.7359252, -7.8659524 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP MUHAMMADIYAH SEMIN", "Y": -7.8661031, "X": 110.7319832 }, "geometry": { "type": "Point", "coordinates": [ 110.7319832, -7.8661031 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 1 SEMIN", "Y": -7.8651327, "X": 110.7381213 }, "geometry": { "type": "Point", "coordinates": [ 110.7381213, -7.8651327 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 2 SEMIN", "Y": -7.8626328, "X": 110.7201029 }, "geometry": { "type": "Point", "coordinates": [ 110.7201029, -7.8626328 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 3 SEMIN", "Y": -7.8321044, "X": 110.7587123 }, "geometry": { "type": "Point", "coordinates": [ 110.7587123, -7.8321044 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 4 SEMIN", "Y": -7.8838696, "X": 110.7411829 }, "geometry": { "type": "Point", "coordinates": [ 110.7411829, -7.8838696 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP PEMBANGUNAN SEMIN", "Y": -7.8655346, "X": 110.7434992 }, "geometry": { "type": "Point", "coordinates": [ 110.7434992, -7.8655346 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MAS AL JAUHAR", "Y": -7.8842808, "X": 110.7176133 }, "geometry": { "type": "Point", "coordinates": [ 110.7176133, -7.8842808 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SLB DARMA PUTRA", "Y": -7.8770584, "X": 110.7234962 }, "geometry": { "type": "Point", "coordinates": [ 110.7234962, -7.8770584 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMA GOTONG ROYONG SEMIN", "Y": -7.8659524, "X": 110.7359252 }, "geometry": { "type": "Point", "coordinates": [ 110.7359252, -7.8659524 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMAN 1 SEMIN", "Y": -7.8569137, "X": 110.7327173 }, "geometry": { "type": "Point", "coordinates": [ 110.7327173, -7.8569137 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK GOTONG ROYONG SEMIN", "Y": -7.8659524, "X": 110.7359252 }, "geometry": { "type": "Point", "coordinates": [ 110.7359252, -7.8659524 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK MUHAMMADIYAH SEMIN", "Y": -7.8665822, "X": 110.734915 }, "geometry": { "type": "Point", "coordinates": [ 110.734915, -7.8665822 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIN 6 GUNUNGKIDUL", "Y": -8.1219104, "X": 110.6413599  }, "geometry": { "type": "Point", "coordinates": [ 110.6413599, -8.1219104 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI TEGALWERU", "Y": -8.1352875, "X": 110.6603906  }, "geometry": { "type": "Point", "coordinates": [ 110.6603906, -8.1352875 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH DLOKO TEPUS","Y": -8.1162615, "X": 110.6477463 }, "geometry": { "type": "Point", "coordinates": [ 110.6477463, -8.1162615 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH PURWODADI TEPUS", "Y": -8.1530554, "X": 110.6733493 }, "geometry": { "type": "Point", "coordinates": [ 110.6733493, -8.1530554 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BANJARSARI TEPUS", "Y": -8.1047394, "X": 110.7044674 }, "geometry": { "type": "Point", "coordinates": [ 110.7044674, -8.1047394 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BANTALWATU TEPUS", "Y": -8.09778, "X": 110.66924  }, "geometry": { "type": "Point", "coordinates": [ 110.66924, -8.09778 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BELIK TEPUS", "Y": -8.1580841, "X": 110.6913179  }, "geometry": { "type": "Point", "coordinates": [ 110.6913179, -8.1580841 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BINTAOS TEPUS", "Y": -8.0873208, "X": 110.6265276 }, "geometry": { "type": "Point", "coordinates": [ 110.6265276, -8.0873208 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GESING TEPUS", "Y": -8.1382375, "X": 110.6755781  }, "geometry": { "type": "Point", "coordinates": [ 110.6755781, -8.1382375 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GIRIPANGGUNG TEPUS","Y": -8.1118837, "X": 110.6951082 }, "geometry": { "type": "Point", "coordinates": [ 110.6951082, -8.1118837 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GUPAKAN I TEPUS","Y": -8.1118837, "X": 110.6951082 }, "geometry": { "type": "Point", "coordinates": [ 110.6951082, -8.1118837 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GUPAKAN II TEPUS","Y": -8.0843998, "X": 110.678703  }, "geometry": { "type": "Point", "coordinates": [ 110.678703, -8.0843998 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KROPAK TEPUS", "Y": -8.121681, "X": 110.6768586  }, "geometry": { "type": "Point", "coordinates": [ 110.6768586, -8.121681 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PLOSO TEPUS", "Y": -8.06785, "X": 110.65543  }, "geometry": { "type": "Point", "coordinates": [ 110.65543, -8.06785 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PUDAK TEPUS", "Y": -8.0991534, "X": 110.6330886  }, "geometry": { "type": "Point", "coordinates": [ 110.6330886, -8.0991534 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PULEIRENG TEPUS","Y": -8.1070421, "X": 110.6313018 }, "geometry": { "type": "Point", "coordinates": [ 110.6313018, -8.1070421 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PURWODADI I TEPUS", "Y": -8.1481546, "X": 110.6796748 }, "geometry": { "type": "Point", "coordinates": [ 110.6796748, -8.1481546 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PURWODADI TEPUS", "Y": -8.1441814, "X": 110.6809587 }, "geometry": { "type": "Point", "coordinates": [ 110.6809587, -8.1441814 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SIDOHARJO TEPUS", "Y": -8.1210527, "X": 110.6275256  }, "geometry": { "type": "Point", "coordinates": [ 110.6275256, -8.1210527 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SUMBERWUNGU I TEPUS", "Y": -8.0850203, "X": 110.6558927  }, "geometry": { "type": "Point", "coordinates": [ 110.6558927, -8.0850203 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SUMBERWUNGU II TEPUS", "Y": -8.1210633, "X": 110.627457  }, "geometry": { "type": "Point", "coordinates": [ 110.627457, -8.1210633 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TEPUS I TEPUS", "Y": -8.1169269, "X": 110.6693877  }, "geometry": { "type": "Point", "coordinates": [ 110.6693877, -8.1169269 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TEPUS IV TEPUS","Y": -8.1338702, "X": 110.6567532 }, "geometry": { "type": "Point", "coordinates": [ 110.6567532, -8.1338702 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN WIDORO TEPUS","Y": -8.08052, "X": 110.6378496 }, "geometry": { "type": "Point", "coordinates": [ 110.6378496, -8.08052 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP MUHAMMADIYAH 1 TEPUS","Y": -8.1052294, "X": 110.6310071 }, "geometry": { "type": "Point", "coordinates": [ 110.6310071, -8.1052294 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP MUHAMMADIYAH 2 TEPUS","Y": -8.14883, "X": 110.68015 }, "geometry": { "type": "Point", "coordinates": [ 110.68015, -8.14883 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 1 TEPUS", "Y": -8.0876291, "X": 110.6271104 }, "geometry": { "type": "Point", "coordinates": [ 110.6271104, -8.0876291 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 2 TEPUS","Y": -8.1005311, "X": 110.6909278 }, "geometry": { "type": "Point", "coordinates": [ 110.6909278, -8.1005311 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 3 TEPUS","Y": -8.09695, "X": 110.66795 }, "geometry": { "type": "Point", "coordinates": [ 110.66795, -8.09695 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP SANJAYA TEPUS", "Y": -8.13291, "X": 110.65652 }, "geometry": { "type": "Point", "coordinates": [ 110.65652, -8.13291 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP TQS ASSALAAM TEPUS", "Y": -8.1497413, "X": 110.6160633 }, "geometry": { "type": "Point", "coordinates": [ 110.6160633, -8.1497413 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SLBS PUSPA MELATI", "Y": -8.0991257, "X": 110.6336076 }, "geometry": { "type": "Point", "coordinates": [ 110.6336076, -8.0991257 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK MUHAMMADIYAH TEPUS", "Y": -8.078366, "X": 110.6247363 }, "geometry": { "type": "Point", "coordinates": [ 110.6247363, -8.078366 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK YPKK TEPUS", "Y": -8.0849284, "X": 110.6784762 }, "geometry": { "type": "Point", "coordinates": [ 110.6784762, -8.0849284 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMKN 1 TEPUS", "Y": -8.1150808, "X": 110.6331074 }, "geometry": { "type": "Point", "coordinates": [ 110.6331074, -8.1150808 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MI MA`ARIF WARENG", "Y": -7.993979098, "X": 110.575467 }, "geometry": { "type": "Point", "coordinates": [ 110.575467, -7.993979098 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIN 4 GUNUNGKIDUL", "Y": -7.968900363, "X": 110.5662059 }, "geometry": { "type": "Point", "coordinates": [ 110.5662059, -7.968900363 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS MAARIF MULO", "Y": -8.034760602, "X": 110.5862779 }, "geometry": { "type": "Point", "coordinates": [ 110.5862779, -8.034760602 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS Mi Darul Qur an", "Y": -7.951596272, "X": 110.5921474 }, "geometry": { "type": "Point", "coordinates": [ 110.5921474, -7.951596272 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI BALEHARJO", "Y": -7.977105132, "X": 110.6156838 }, "geometry": { "type": "Point", "coordinates": [ 110.6156838, -7.977105132 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI BANSARI", "Y": -7.967567375, "X": 110.5917361 }, "geometry": { "type": "Point", "coordinates": [ 110.5917361, -7.967567375 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI RANDUKUNING", "Y": -7.975869956, "X": 110.6272485 }, "geometry": { "type": "Point", "coordinates": [ 110.6272485, -7.975869956 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSN 4 GUNUNGKIDUL", "Y": -7.963991845, "X": 110.5888733 }, "geometry": { "type": "Point", "coordinates": [ 110.5888733, -7.963991845 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSS AL I`TISHAM", "Y": -7.964233878, "X": 110.5950851 }, "geometry": { "type": "Point", "coordinates": [ 110.5950851, -7.964233878 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSS DARUL QUR`AN", "Y": -7.950598418, "X": 110.5918543 }, "geometry": { "type": "Point", "coordinates": [ 110.5918543, -7.950598418 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSS MUHAMMADIYAH WONOSARI", "Y": -7.963915815, "X": 110.6002743 }, "geometry": { "type": "Point", "coordinates": [ 110.6002743, -7.963915815 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD BOPKRI WONOSARI II", "Y": -7.96396823, "X": 110.6085359 }, "geometry": { "type": "Point", "coordinates": [ 110.6085359, -7.96396823 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD ISLAM AL AZHAR 59 WONOSARI", "Y": -7.957172319, "X": 110.6204338 }, "geometry": { "type": "Point", "coordinates": [ 110.6204338, -7.957172319 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD IT TUNAS MULIA WONOSARI", "Y": -7.955404444, "X": 110.5946707 }, "geometry": { "type": "Point", "coordinates": [ 110.5946707, -7.955404444 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD KANISIUS PULUTAN WONOSARI", "Y": -7.968928093, "X": 110.5630431 }, "geometry": { "type": "Point", "coordinates": [ 110.5630431, -7.968928093 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD KANISIUS WONOSARI II WONOSARI", "Y": -7.970506041, "X": 110.6074117 }, "geometry": { "type": "Point", "coordinates": [ 110.6074117, -7.970506041 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH AL MUJAHIDIN WONOSARI", "Y": -7.967871972, "X": 110.6096704 }, "geometry": { "type": "Point", "coordinates": [ 110.6096704, -7.967871972 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH KARANGTENGAH WONOSARI", "Y": -7.923969242, "X": 110.6169208 }, "geometry": { "type": "Point", "coordinates": [ 110.6169208, -7.923969242 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH PIYAMAN WONOSARI", "Y": -7.963720544, "X": 110.5983471 }, "geometry": { "type": "Point", "coordinates": [ 110.5983471, -7.963720544 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH SIRAMAN WONOSARI", "Y": -7.970549502, "X": 110.5733146 }, "geometry": { "type": "Point", "coordinates": [ 110.5733146, -7.970549502 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH WARENG WONOSARI", "Y": -7.98998373, "X": 110.5740026 }, "geometry": { "type": "Point", "coordinates": [ 110.5740026, -7.98998373 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH WONOSARI", "Y": -7.962318848, "X": 110.6089079 }, "geometry": { "type": "Point", "coordinates": [ 110.6089079, -7.962318848 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BALEHARJO WONOSARI", "Y": -7.973307436, "X": 110.6143217 }, "geometry": { "type": "Point", "coordinates": [ 110.6143217, -7.973307436 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN DUWET WONOSARI", "Y": -7.998355056, "X": 110.5922113 }, "geometry": { "type": "Point", "coordinates": [ 110.5922113, -7.998355056 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GARI I WONOSARI", "Y": -7.921100572, "X": 110.591907 }, "geometry": { "type": "Point", "coordinates": [ 110.591907, -7.921100572 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GARI III WONOSARI", "Y": -7.919711278, "X": 110.5977058 }, "geometry": { "type": "Point", "coordinates": [ 110.5977058, -7.919711278 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN JAMBE WONOSARI", "Y": -8.005403142, "X": 110.6035398 }, "geometry": { "type": "Point", "coordinates": [ 110.6035398, -8.005403142 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN JERUKSARI WONOSARI", "Y": -7.960886996, "X": 110.6016251 }, "geometry": { "type": "Point", "coordinates": [ 110.6016251, -7.960886996 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KAJAR WONOSARI", "Y": -7.935870479, "X": 110.6104474 }, "geometry": { "type": "Point", "coordinates": [ 110.6104474, -7.935870479 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KAMAL WONOSARI", "Y": -8.038894037, "X": 110.5741783 }, "geometry": { "type": "Point", "coordinates": [ 110.5741783, -8.038894037 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGREJEK I WONOSARI", "Y": -7.986414755, "X": 110.5962632 }, "geometry": { "type": "Point", "coordinates": [ 110.5962632, -7.986414755 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGREJEK II WONOSARI", "Y": -7.979857637, "X": 110.5979147 }, "geometry": { "type": "Point", "coordinates": [ 110.5979147, -7.979857637 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGTENGAH BARU WONOSARI", "Y": -7.932589464, "X": 110.6041898 }, "geometry": { "type": "Point", "coordinates": [ 110.6041898, -7.932589464 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGTENGAH III WONOSARI", "Y": -7.920528186, "X": 110.603961 }, "geometry": { "type": "Point", "coordinates": [ 110.603961, -7.920528186 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KARANGTENGAH IV WONOSARI", "Y": -7.926828223, "X": 110.6162436 }, "geometry": { "type": "Point", "coordinates": [ 110.6162436, -7.926828223 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN MULO II WONOSARI", "Y": -8.019182774000001, "X": 110.5817909 }, "geometry": { "type": "Point", "coordinates": [ 110.5817909, -8.019182774 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN MULOBARU WONOSARI", "Y": -8.026573631, "X": 110.5865072 }, "geometry": { "type": "Point", "coordinates": [ 110.5865072, -8.026573631 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PIYAMAN I WONOSARI", "Y": -7.940585676, "X": 110.5954109 }, "geometry": { "type": "Point", "coordinates": [ 110.5954109, -7.940585676 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PIYAMAN II WONOSARI", "Y": -7.942916581, "X": 110.6046626 }, "geometry": { "type": "Point", "coordinates": [ 110.6046626, -7.942916581 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PIYAMAN III WONOSARI", "Y": -7.950676692, "X": 110.6053117 }, "geometry": { "type": "Point", "coordinates": [ 110.6053117, -7.950676692 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SELANG WONOSARI", "Y": -7.966682452, "X": 110.6209933 }, "geometry": { "type": "Point", "coordinates": [ 110.6209933, -7.966682452 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SENENG WONOSARI", "Y": -7.975710485, "X": 110.5939509 }, "geometry": { "type": "Point", "coordinates": [ 110.5939509, -7.975710485 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SINGKAR WONOSARI", "Y": -7.983123836, "X": 110.5803839 }, "geometry": { "type": "Point", "coordinates": [ 110.5803839, -7.983123836 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SIRAMAN I WONOSARI", "Y": -7.970612435, "X": 110.5872916 }, "geometry": { "type": "Point", "coordinates": [ 110.5872916, -7.970612435 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SIRAMAN II WONOSARI", "Y": -7.990036842, "X": 110.5781473 }, "geometry": { "type": "Point", "coordinates": [ 110.5781473, -7.990036842 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SIRAMAN III WONOSARI", "Y": -7.971222732, "X": 110.5839644 }, "geometry": { "type": "Point", "coordinates": [ 110.5839644, -7.971222732 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SOKA WONOSARI", "Y": -8.002661895, "X": 110.5653127 }, "geometry": { "type": "Point", "coordinates": [ 110.5653127, -8.002661895 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN WONOSARI BARU WONOSARI", "Y": -7.968705545, "X": 110.5960325 }, "geometry": { "type": "Point", "coordinates": [ 110.5960325, -7.968705545 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN WONOSARI I WONOSARI", "Y": -7.966205466, "X": 110.6011809 }, "geometry": { "type": "Point", "coordinates": [ 110.6011809, -7.966205466 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN WONOSARI II WONOSARI", "Y": -7.969417889, "X": 110.5990789 }, "geometry": { "type": "Point", "coordinates": [ 110.5990789, -7.969417889 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN WONOSARI IV WONOSARI", "Y": -7.959853533, "X": 110.5935115 }, "geometry": { "type": "Point", "coordinates": [ 110.5935115, -7.959853533 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN WONOSARI VI WONOSARI", "Y": -7.961423666, "X": 110.596946 }, "geometry": { "type": "Point", "coordinates": [ 110.596946, -7.961423666 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP BOPKRI WONOSARI", "Y": -7.96660664, "X": 110.6055844 }, "geometry": { "type": "Point", "coordinates": [ 110.6055844, -7.96660664 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP ISLAM AL AZHAR 38 WONOSARI", "Y": -7.956679639, "X": 110.6205915 }, "geometry": { "type": "Point", "coordinates": [ 110.6205915, -7.956679639 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP IT TUNAS MULIA", "Y": -7.999457853, "X": 110.5942543 }, "geometry": { "type": "Point", "coordinates": [ 110.5942543, -7.999457853 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP KANISIUS WONOSARI", "Y": -7.971181688, "X": 110.6067053 }, "geometry": { "type": "Point", "coordinates": [ 110.6067053, -7.971181688 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP MUHAMMADIYAH 1 WONOSARI", "Y": -7.964525843, "X": 110.5994908 }, "geometry": { "type": "Point", "coordinates": [ 110.5994908, -7.964525843 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP MUHAMMADIYAH 2 WONOSARI", "Y": -7.987468921, "X": 110.5789058 }, "geometry": { "type": "Point", "coordinates": [ 110.5789058, -7.987468921 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 1 WONOSARI", "Y": -7.964764044, "X": 110.6050345 }, "geometry": { "type": "Point", "coordinates": [ 110.6050345, -7.964764044 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 2 WONOSARI", "Y": -7.967445673, "X": 110.5986133 }, "geometry": { "type": "Point", "coordinates": [ 110.5986133, -7.967445673 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 3 WONOSARI", "Y": -8.013456705, "X": 110.587567 }, "geometry": { "type": "Point", "coordinates": [ 110.587567, -8.013456705 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 4 WONOSARI", "Y": -7.940293492, "X": 110.5971128 }, "geometry": { "type": "Point", "coordinates": [ 110.5971128, -7.940293492 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MAN 1 GUNUNGKIDUL", "Y": -7.971443413, "X": 110.5938526 }, "geometry": { "type": "Point", "coordinates": [ 110.5938526, -7.971443413 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MAS AL MUMTAZ PLUS", "Y": -7.875230935, "X": 110.5316013 }, "geometry": { "type": "Point", "coordinates": [ 110.5316013, -7.875230935 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SLB NEGERI 1 GUNUNGKIDUL", "Y": -7.968747089, "X": 110.6110313 }, "geometry": { "type": "Point", "coordinates": [ 110.6110313, -7.968747089 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMA DOMINIKUS WONOSARI", "Y": -7.970659249, "X": 110.6076794 }, "geometry": { "type": "Point", "coordinates": [ 110.6076794, -7.970659249 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMA MUHAMMADIYAH Al MUJAHIDIN WONOSARI", "Y": -7.953681552, "X": 110.5926766 }, "geometry": { "type": "Point", "coordinates": [ 110.5926766, -7.953681552 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMAN 1 WONOSARI", "Y": -7.965350589, "X": 110.5991848 }, "geometry": { "type": "Point", "coordinates": [ 110.5991848, -7.965350589 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMAN 2 WONOSARI", "Y": -7.969741053, "X": 110.5943423 }, "geometry": { "type": "Point", "coordinates": [ 110.5943423, -7.969741053 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMAS PEMBANGUNAN I WONOSARI", "Y": -7.969752874, "X": 110.5953389 }, "geometry": { "type": "Point", "coordinates": [ 110.5953389, -7.969752874 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK 45 WONOSARI", "Y": -7.953998144, "X": 110.5901064 }, "geometry": { "type": "Point", "coordinates": [ 110.5901064, -7.953998144 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK DARUL QURAN WONOSARI", "Y": -7.951115621, "X": 110.5927793 }, "geometry": { "type": "Point", "coordinates": [ 110.5927793, -7.951115621 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK GIRI HANDAYANI", "Y": -7.954272057, "X": 110.5937547 }, "geometry": { "type": "Point", "coordinates": [ 110.5937547, -7.954272057 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK KESEHATAN WONOSARI", "Y": -7.954070311, "X": 110.5937436 }, "geometry": { "type": "Point", "coordinates": [ 110.5937436, -7.954070311 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK MAARIF WONOSARI", "Y": -7.969490169, "X": 110.5957857 }, "geometry": { "type": "Point", "coordinates": [ 110.5957857, -7.969490169 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK MUHAMMADIYAH WONOSARI", "Y": -7.963900765, "X": 110.6007552 }, "geometry": { "type": "Point", "coordinates": [ 110.6007552, -7.963900765 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK YAPPI WONOSARI", "Y": -7.967677678, "X": 110.593111 }, "geometry": { "type": "Point", "coordinates": [ 110.593111, -7.967677678 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMKN 1 WONOSARI", "Y": -7.967044451, "X": 110.6002607 }, "geometry": { "type": "Point", "coordinates": [ 110.6002607, -7.967044451 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMKN 2 WONOSARI", "Y": -7.958267256, "X": 110.5930827 }, "geometry": { "type": "Point", "coordinates": [ 110.5930827, -7.958267256 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMKN 3 WONOSARI", "Y": -7.963092342, "X": 110.6079958 }, "geometry": { "type": "Point", "coordinates": [ 110.6079958, -7.963092342 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "MIS NAHDLATUTH THULLAAB", "Y": -7.888941455, "X": 110.5867116 }, "geometry": { "type": "Point", "coordinates": [ 110.5867116, -7.888941455 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "MTSS SUNAN KALIJAGA", "Y": -7.794175814, "X": 110.5503271 }, "geometry": { "type": "Point", "coordinates": [ 110.5503271, -7.794175814 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SD ISLAM TERPADU AL-ASROR GEDANGSARI", "Y": -7.824723671, "X": 110.5735807 }, "geometry": { "type": "Point", "coordinates": [ 110.5735807, -7.824723671 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SD MUHAMMADIYAH BOARDING SCHOOL AL MUTTAQIIN", "Y": -7.963696448, "X": 110.5984315 }, "geometry": { "type": "Point", "coordinates": [ 110.5984315, -7.963696448 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN BUYUTAN GEDANGSARI", "Y": -7.856178938, "X": 110.5862422 }, "geometry": { "type": "Point", "coordinates": [ 110.5862422, -7.856178938 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN CANDI GEDANGSARI", "Y": -7.800694595, "X": 110.6233002 }, "geometry": { "type": "Point", "coordinates": [ 110.6233002, -7.800694595 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN GEDANGAN I GEDANGSARI", "Y": -7.839294438, "X": 110.5903068 }, "geometry": { "type": "Point", "coordinates": [ 110.5903068, -7.839294438 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN GEDANGAN II GEDANGSARI", "Y": -7.834591764, "X": 110.5919988 }, "geometry": { "type": "Point", "coordinates": [ 110.5919988, -7.834591764 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN GUPIT GEDANGSARI", "Y": -7.8141949, "X": 110.6435906 }, "geometry": { "type": "Point", "coordinates": [ 110.6435906, -7.8141949 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN GUYANGAN GEDANGSARI", "Y": -7.817980434, "X": 110.6180313 }, "geometry": { "type": "Point", "coordinates": [ 110.6180313, -7.817980434 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN HARGOMULYO I GEDANGSARI", "Y": -7.838072339, "X": 110.591532 }, "geometry": { "type": "Point", "coordinates": [ 110.591532, -7.838072339 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN HARGOMULYO II GEDANGSARI", "Y": -7.842081223, "X": 110.5928337 }, "geometry": { "type": "Point", "coordinates": [ 110.5928337, -7.842081223 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN KARANGANYAR GEDANGSARI", "Y": -7.875254676, "X": 110.5732896 }, "geometry": { "type": "Point", "coordinates": [ 110.5732896, -7.875254676 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN KEDUNGBOLONG GEDANGSARI", "Y": -7.811010876, "X": 110.5714493 }, "geometry": { "type": "Point", "coordinates": [ 110.5714493, -7.811010876 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN MERTELU BARU GEDANGSARI", "Y": -7.82428996, "X": 110.6101572 }, "geometry": { "type": "Point", "coordinates": [ 110.6101572, -7.82428996 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN MERTELU GEDANGSARI", "Y": -7.834653821, "X": 110.607773 }, "geometry": { "type": "Point", "coordinates": [ 110.607773, -7.834653821 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN NGALANG I GEDANGSARI", "Y": -7.884494625, "X": 110.5746473 }, "geometry": { "type": "Point", "coordinates": [ 110.5746473, -7.884494625 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN NGALANG II GEDANGSARI", "Y": -7.884274014, "X": 110.5812634 }, "geometry": { "type": "Point", "coordinates": [ 110.5812634, -7.884274014 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN NGALANG-ALANG OMBO GEDANGSARI", "Y": -7.787417548, "X": 110.561898 }, "geometry": { "type": "Point", "coordinates": [ 110.561898, -7.787417548 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN PONDOK GEDANGSARI", "Y": -7.799815, "X": 110.5794317 }, "geometry": { "type": "Point", "coordinates": [ 110.5794317, -7.799815 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN PRENGGUK I GEDANGSARI", "Y": null, "X": null }, "geometry": null },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN PRENGGUK II GEDANGSARI", "Y": -7.815048509, "X": 110.6408816 }, "geometry": { "type": "Point", "coordinates": [ 110.6408816, -7.815048509 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN SAMPANG GEDANGSARI", "Y": -7.808105774, "X": 110.574726 }, "geometry": { "type": "Point", "coordinates": [ 110.574726, -7.808105774 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN SERUT BARU GEDANGSARI", "Y": -7.795626367, "X": 110.5486171 }, "geometry": { "type": "Point", "coordinates": [ 110.5486171, -7.795626367 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN SERUT GEDANGSARI", "Y": -7.792967607, "X": 110.5498616 }, "geometry": { "type": "Point", "coordinates": [ 110.5498616, -7.792967607 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN TEGALREJO GEDANGSARI", "Y": -7.806438113, "X": 110.6570433 }, "geometry": { "type": "Point", "coordinates": [ 110.6570433, -7.806438113 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN TENGKLIK GEDANGSARI", "Y": -7.801156381, "X": 110.6322071 }, "geometry": { "type": "Point", "coordinates": [ 110.6322071, -7.801156381 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SDN WATUGAJAH GEDANGSARI", "Y": -7.80799811, "X": 110.600151 }, "geometry": { "type": "Point", "coordinates": [ 110.600151, -7.80799811 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SMP MUHAMMADIYAH 1 GEDANGSARI", "Y": -7.807094676, "X": 110.5748939 }, "geometry": { "type": "Point", "coordinates": [ 110.5748939, -7.807094676 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SMP MUHAMMADIYAH 2 GEDANGSARI", "Y": -7.834557273, "X": 110.604989 }, "geometry": { "type": "Point", "coordinates": [ 110.604989, -7.834557273 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SMP NEGERI 1 GEDANGSARI", "Y": -7.883523445, "X": 110.5797284 }, "geometry": { "type": "Point", "coordinates": [ 110.5797284, -7.883523445 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SMP NEGERI 2 GEDANGSARI", "Y": -7.803532631, "X": 110.6325135 }, "geometry": { "type": "Point", "coordinates": [ 110.6325135, -7.803532631 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SMP NEGERI 3 GEDANGSARI", "Y": -7.843417891, "X": 110.5912116 }, "geometry": { "type": "Point", "coordinates": [ 110.5912116, -7.843417891 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "MA Muhammadiyah Al-Muttaqiin Gedangsari", "Y": -7.798497013, "X": 110.5720779 }, "geometry": { "type": "Point", "coordinates": [ 110.5720779, -7.798497013 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SMKN 1 GEDANGSARI", "Y": -7.844126821, "X": 110.5926764 }, "geometry": { "type": "Point", "coordinates": [ 110.5926764, -7.844126821 ] } },
+{ "type": "Feature", "properties": { "Nama Sekolah": "SMKN 2 GEDANGSARI", "Y": -7.80110738, "X": 110.6324476 }, "geometry": { "type": "Point", "coordinates": [ 110.6324476, -7.80110738 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS MUHAMMADIYAH WONOSOBO", "Y": -8.108571, "X": 110.5745622 }, "geometry": { "type": "Point", "coordinates": [ 110.5745622, -8.108571 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH JARAH TANJUNGSARI", "Y": -8.0777252, "X": 110.5878106 }, "geometry": { "type": "Point", "coordinates": [ 110.5878106, -8.0777252 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH JRAKAH TANJUNGSARI", "Y": -8.0669122, "X": 110.6290674 }, "geometry": { "type": "Point", "coordinates": [ 110.6290674, -8.0669122 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH KEMADANG TANJUNGSARI", "Y": -8.0931383, "X": 110.5688729 }, "geometry": { "type": "Point", "coordinates": [ 110.5688729, -8.0931383 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BANJARHARJO TANJUNGSARI", "Y": -8.0742836, "X": 110.601913 }, "geometry": { "type": "Point", "coordinates": [ 110.601913, -8.0742836 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GATAK TANJUNGSARI", "Y": -8.0742569, "X": 110.5941881 }, "geometry": { "type": "Point", "coordinates": [ 110.5941881, -8.0742569 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GEBANG TANJUNGSARI", "Y": -8.0703447, "X": 110.5692551 }, "geometry": { "type": "Point", "coordinates": [ 110.5692551, -8.0703447 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN HARGOSARI TANJUNGSARI", "Y": -8.0539647, "X": 110.6384151 }, "geometry": { "type": "Point", "coordinates": [ 110.6384151, -8.0539647 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN JATEN TANJUNGSARI", "Y": -8.0892146, "X": 110.6072151 }, "geometry": { "type": "Point", "coordinates": [ 110.6072151, -8.0892146 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KANIGORO TANJUNGSARI", "Y": -8.0878472, "X": 110.5770451 }, "geometry": { "type": "Point", "coordinates": [ 110.5770451, -8.0878472 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KEMADANG TANJUNGSARI", "Y": -8.0687315, "X": 110.5259302 }, "geometry": { "type": "Point", "coordinates": [ 110.5259302, -8.0687315 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KEMIRI I TANJUNGSARI", "Y": -8.0688399, "X": 110.5568304 }, "geometry": { "type": "Point", "coordinates": [ 110.5568304, -8.0688399 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN KEMIRI II TANJUNGSARI", "Y": -8.0696456, "X": 110.5831469 }, "geometry": { "type": "Point", "coordinates": [ 110.5831469, -8.0696456 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN MENDANG TANJUNGSARI", "Y": -8.0720493, "X": 110.6112273 }, "geometry": { "type": "Point", "coordinates": [ 110.6112273, -8.0720493 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN MENTEL I TANJUNGSARI", "Y": -8.0590122, "X": 110.6149549 }, "geometry": { "type": "Point", "coordinates": [ 110.6149549, -8.0590122 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN MENTEL II TANJUNGSARI", "Y": -8.0573966, "X": 110.6112923 }, "geometry": { "type": "Point", "coordinates": [ 110.6112923, -8.0573966 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGESTIHARJO TANJUNGSARI", "Y": -8.0971754, "X": 110.6034415 }, "geometry": { "type": "Point", "coordinates": [ 110.6034415, -8.0971754 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PANGGANG TANJUNGSARI", "Y": -8.0614846, "X": 110.5614551 }, "geometry": { "type": "Point", "coordinates": [ 110.5614551, -8.0614846 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN REJOSARI TANJUNGSARI", "Y": -8.1101443, "X": 110.5590594 }, "geometry": { "type": "Point", "coordinates": [ 110.5590594, -8.1101443 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP MUHAMMADIYAH TANJUNGSARI", "Y": -8.0607214, "X": 110.6163104 }, "geometry": { "type": "Point", "coordinates": [ 110.6163104, -8.0607214 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 1 TANJUNGSARI", "Y": -8.1116926, "X": 110.5592495 }, "geometry": { "type": "Point", "coordinates": [ 110.5592495, -8.1116926 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 2 TANJUNGSARI", "Y": -8.0950188, "X": 110.6089967 }, "geometry": { "type": "Point", "coordinates": [ 110.6089967, -8.0950188 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 3 TANJUNGSARI", "Y": -8.0698239, "X": 110.5693099 }, "geometry": { "type": "Point", "coordinates": [ 110.5693099, -8.0698239 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMAN 1 TANJUNGSARI", "Y": -8.0634147, "X": 110.5749151 }, "geometry": { "type": "Point", "coordinates": [ 110.5749151, -8.0634147 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMKN 1 TANJUNGSARI", "Y": -8.1131053, "X": 110.5594577 }, "geometry": { "type": "Point", "coordinates": [ 110.5594577, -8.1131053 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MI Wasathiyah", "Y": -7.943979963, "X": 110.5781254}, "geometry": { "type": "Point", "coordinates": [ 110.5781254, -7.943979963 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS JALAKAN", "Y": -7.925537303, "X": 110.5811082 }, "geometry": { "type": "Point", "coordinates": [ 110.5811082, -7.925537303 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS MUHAMMADIYAH NGASEM" , "Y": -7.963155885, "X": 110.5537159 }, "geometry": { "type": "Point", "coordinates": [ 110.5537159, -7.963155885 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI BANYUSOCO", "Y": -7.984986047, "X": 110.4654034  }, "geometry": { "type": "Point", "coordinates": [ 110.4654034, -7.984986047 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI GEDAD 2","Y": -7.984058445, "X": 110.4549481  }, "geometry": { "type": "Point", "coordinates": [ 110.4549481, -7.984058445 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI GEDAD I", "Y": -7.991324325, "X": 110.4598948  }, "geometry": { "type": "Point", "coordinates": [ 110.4598948, -7.991324325 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI GUBUKRUBUH", "Y": -7.937469845, "X": 110.5013121  }, "geometry": { "type": "Point", "coordinates": [ 110.5013121, -7.937469845 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI KALONGAN", "Y": -7.949251944, "X": 110.5266587 }, "geometry": { "type": "Point", "coordinates": [ 110.5266587, -7.949251944 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI KEDUNGWANGLU","Y": -7.965725173, "X": 110.4468986 }, "geometry": { "type": "Point", "coordinates": [ 110.4468986, -7.965725173 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI NGLERI", "Y": -7.925200046, "X": 110.5191499 }, "geometry": { "type": "Point", "coordinates": [ 110.5191499, -7.925200046 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI NGRANCANG", "Y": -7.94801029, "X": 110.5002696 }, "geometry": { "type": "Point", "coordinates": [ 110.5002696, -7.94801029 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI PUTAT","Y": -7.956827586, "X": 110.5133332 }, "geometry": { "type": "Point", "coordinates": [ 110.5133332, -7.956827586 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI TANJUNG GETAS","Y": -7.923287851, "X": 110.5029235 }, "geometry": { "type": "Point", "coordinates": [ 110.5029235, -7.923287851 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MIS YAPPI WIYOKO","Y": -7.968053934, "X": 110.5388429 }, "geometry": { "type": "Point", "coordinates": [ 110.5388429, -7.968053934 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSN 1 GUNUNGKIDUL", "Y": -7.963962401, "X": 110.5888758  }, "geometry": { "type": "Point", "coordinates": [ 110.5888758, -7.963962401 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSS AL I`ANAH PLAYEN", "Y": -7.940378207, "X": 110.5533792  }, "geometry": { "type": "Point", "coordinates": [ 110.5533792, -7.940378207 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MTSS YAPPI DENGOK", "Y": -7.953644242, "X": 110.52689 }, "geometry": { "type": "Point", "coordinates": [ 110.526893, -7.953644242 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD KANISIUS BANDUNG I PLAYEN", "Y": -7.925076314, "X": 110.5599198 }, "geometry": { "type": "Point", "coordinates": [ 110.5599198, -7.925076314 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD KANISIUS BEJI PLAYEN", "Y": -7.914681522, "X": 110.5699516 }, "geometry": { "type": "Point", "coordinates": [ 110.5699516, -7.914681522 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH BEJI PLAYEN", "Y": -7.907535158, "X": 110.5778189 }, "geometry": { "type": "Point", "coordinates": [ 110.5778189, -7.907535158 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD MUHAMMADIYAH BOGOR PLAYEN", "Y": -7.94730408, "X": 110.5669506  }, "geometry": { "type": "Point", "coordinates": [ 110.5669506, -7.94730408 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD QURAN UNGGULAN AL-ITISHAM PLAYEN", "Y": -7.95276983, "X": 110.5418919 }, "geometry": { "type": "Point", "coordinates": [ 110.5418919, -7.95276983 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SD VERITAS BOGOR", "Y": -7.947417235, "X": 110.5688672 }, "geometry": { "type": "Point", "coordinates": [ 110.5688672, -7.947417235 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDII WALADUN SHOLIHUN PLAYEN","Y": -7.932984566, "X": 110.5753108 }, "geometry": { "type": "Point", "coordinates": [ 110.5753108, -7.932984566 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BANARAN I PLAYEN", "Y": -7.9164334, "X": 110.5360684 }, "geometry": { "type": "Point", "coordinates": [ 110.5360684, -7.9164334 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BANARAN III PLAYEN", "Y": -7.916010903, "X": 110.5407109 }, "geometry": { "type": "Point", "coordinates": [ 110.5407109, -7.916010903 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BANYUSOCO I PLAYEN", "Y": -7.975876591, "X": 110.4751195 }, "geometry": { "type": "Point", "coordinates": [ 110.4751195, -7.975876591 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BANYUSOCO II PLAYEN", "Y": -7.969584218, "X": 110.5020975  }, "geometry": { "type": "Point", "coordinates": [ 110.5020975, -7.969584218 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BLEBERAN PLAYEN" , "Y": -7.962856786, "X": 110.5301793 }, "geometry": { "type": "Point", "coordinates": [ 110.5301793, -7.962856786 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN BULU PLAYEN" , "Y": -7.916606195, "X": 110.5526819 }, "geometry": { "type": "Point", "coordinates": [ 110.5526819, -7.916606195 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN DENGOK I PLAYEN", "Y": -7.9527115, "X": 110.5355139 }, "geometry": { "type": "Point", "coordinates": [ 110.5355139, -7.9527115 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN DENGOK II PLAYEN", "Y": -7.953681375, "X": 110.5319608 }, "geometry": { "type": "Point", "coordinates": [ 110.5319608, -7.953681375 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GADING ASRI PLAYEN", "Y": -7.914062007, "X": 110.557082 }, "geometry": { "type": "Point", "coordinates": [ 110.557082, -7.914062007 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GETAS I PLAYEN", "Y": -7.930229077, "X": 110.5056031 }, "geometry": { "type": "Point", "coordinates": [ 110.5056031, -7.930229077 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN GETAS II PLAYEN", "Y": -7.93427643, "X": 110.5150993 }, "geometry": { "type": "Point", "coordinates": [ 110.5150993, -7.93427643 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN LOGANDENG PLAYEN", "Y": -7.937251235, "X": 110.5750422 }, "geometry": { "type": "Point", "coordinates": [ 110.5750422, -7.937251235 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN MENDONGAN PLAYEN", "Y": -7.929273824, "X": 110.5652124  }, "geometry": { "type": "Point", "coordinates": [ 110.5652124, -7.929273824 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGLERI PLAYEN", "Y": -7.922168924, "X": 110.5217912 }, "geometry": { "type": "Point", "coordinates": [ 110.5217912, -7.922168924 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN NGUNUT PLAYEN", "Y": -7.945500212, "X": 110.5396013 }, "geometry": { "type": "Point", "coordinates": [ 110.5396013, -7.945500212 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PLAYEN I PLAYEN","Y": -7.943810701, "X": 110.5500458 }, "geometry": { "type": "Point", "coordinates": [ 110.5500458, -7.943810701 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PLAYEN III PLAYEN", "Y": -7.937855035, "X": 110.5526036 }, "geometry": { "type": "Point", "coordinates": [ 110.5526036, -7.937855035 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PLAYEN IV PLAYEN", "Y": -7.948997193, "X": 110.5494969 }, "geometry": { "type": "Point", "coordinates": [ 110.5494969, -7.948997193 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PLAYEN V PLAYEN", "Y": -7.9310193, "X": 110.5467469 }, "geometry": { "type": "Point", "coordinates": [ 110.5467469, -7.9310193 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PLAYEN VI PLAYEN", "Y": -7.9452146, "X": 110.5346958 }, "geometry": { "type": "Point", "coordinates": [ 110.5346958, -7.9452146 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PLEMBON PLAYEN", "Y": -7.9273299, "X": 110.5731693 }, "geometry": { "type": "Point", "coordinates": [ 110.5731693, -7.9273299 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PLEMBUTAN ASRI PLAYEN" , "Y": -7.9685533, "X": 110.5446142}, "geometry": { "type": "Point", "coordinates": [ 110.5446142, -7.9685533 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN PLEMBUTAN I PLAYEN","Y": -7.9629182, "X": 110.5462959 }, "geometry": { "type": "Point", "coordinates": [ 110.5462959, -7.9629182 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SAWAHAN PLAYEN", "Y": -7.9576664, "X": 110.521704 }, "geometry": { "type": "Point", "coordinates": [ 110.521704, -7.9576664 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SIYONO I PLAYEN", "Y": -7.9480101, "X": 110.5677302 }, "geometry": { "type": "Point", "coordinates": [ 110.5677302, -7.9480101 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN SIYONO III PLAYEN", "Y": -7.9465113, "X": 110.5824368 }, "geometry": { "type": "Point", "coordinates": [ 110.5824368, -7.9465113 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN TEGUHAN PLAYEN","Y": -7.9227889, "X": 110.5352338 }, "geometry": { "type": "Point", "coordinates": [ 110.5352338, -7.9227889 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN WEROHARJO PLAYEN", "Y": -7.9050413, "X": 110.5728034 }, "geometry": { "type": "Point", "coordinates": [ 110.5728034, -7.9050413 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SDN WONOLAGI PLAYEN", "Y": -7.889098, "X": 110.495558 }, "geometry": { "type": "Point", "coordinates": [ 110.495558, -7.889098 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP AR RUHAMAA", "Y": -7.9514546, "X": 110.5514861 }, "geometry": { "type": "Point", "coordinates": [ 110.5514861, -7.9514546 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP MUHAMMADIYAH AL MUJAHIDIN", "Y": -7.9349691, "X": 110.57212 }, "geometry": { "type": "Point", "coordinates": [ 110.57212, -7.9349691 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP MUHAMMADIYAH PLAYEN", "Y": -7.9427081, "X": 110.5485448 }, "geometry": { "type": "Point", "coordinates": [ 110.5485448, -7.9427081 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 1 PLAYEN", "Y": -7.9449416, "X": 110.5528132 }, "geometry": { "type": "Point", "coordinates": [ 110.5528132, -7.9449416 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 2 PLAYEN", "Y": -7.912628, "X": 110.556386 }, "geometry": { "type": "Point", "coordinates": [ 110.556386, -7.912628 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 3 PLAYEN", "Y": -7.9252611, "X": 110.5634142 }, "geometry": { "type": "Point", "coordinates": [ 110.5634142, -7.9252611 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP NEGERI 4 PLAYEN", "Y": -7.9201645, "X": 110.5355346 }, "geometry": { "type": "Point", "coordinates": [ 110.5355346, -7.9201645 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP PGRI PLAYEN", "Y": -7.9453412, "X": 110.5550418 }, "geometry": { "type": "Point", "coordinates": [ 110.5550418, -7.9453412 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMP TAMAN DEWASA PLAYEN", "Y": -7.9404619, "X": 110.549242 }, "geometry": { "type": "Point", "coordinates": [ 110.549242, -7.9404619 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MAS AL ITISHAM PLAYEN", "Y": -7.9643537, "X": 110.586265 }, "geometry": { "type": "Point", "coordinates": [ 110.586265, -7.9643537 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MAS AL-I`ANAH PLAYEN","Y": -7.9405276, "X": 110.5508243 }, "geometry": { "type": "Point", "coordinates": [ 110.5508243, -7.9405276 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "MAS YAPPI GUBUKRUBUH", "Y": -7.937519466, "X": 110.5010999 }, "geometry": { "type": "Point", "coordinates": [ 110.5010999, -7.937519466 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SLBN 2 GUNUNG KIDUL", "Y": -7.95035005, "X": 110.568022 }, "geometry": { "type": "Point", "coordinates": [ 110.568022, -7.95035005 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMA BUAHATI ISLAMIC SCHOOL YOGYAKARTA", "Y": -7.922976013, "X": 110.5483681 }, "geometry": { "type": "Point", "coordinates": [ 110.5483681, -7.922976013 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMA PGRI PLAYEN", "Y": -7.945254245, "X": 110.5548046 }, "geometry": { "type": "Point", "coordinates": [ 110.5548046, -7.945254245 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMAN 1 PLAYEN", "Y": -7.966413019, "X": 110.5447799 }, "geometry": { "type": "Point", "coordinates": [ 110.5447799, -7.966413019 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMAN 2 PLAYEN", "Y": -7.937232535, "X": 110.5743141 }, "geometry": { "type": "Point", "coordinates": [ 110.5743141, -7.937232535 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK AL HIKMAH GUBUKRUBUH", "Y": -7.936995896, "X": 110.5005504 }, "geometry": { "type": "Point", "coordinates": [ 110.5005504, -7.936995896 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK MAARIF PLAYEN", "Y": -7.944004979, "X": 110.5536117 }, "geometry": { "type": "Point", "coordinates": [ 110.5536117, -7.944004979 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK MAHISA AGNI GUNUNGKIDUL", "Y": -7.936050211, "X": 110.5679135 }, "geometry": { "type": "Point", "coordinates": [ 110.5679135, -7.936050211 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK MARDHOTULLAH Playen", "Y": -7.951683053, "X": 110.5873009 }, "geometry": { "type": "Point", "coordinates": [ 110.5873009, -7.951683053 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK MUHAMMADIYAH 1 PLAYEN", "Y": -7.951673663, "X": 110.5873012 }, "geometry": { "type": "Point", "coordinates": [ 110.5873012, -7.951673663 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK MUHAMMADIYAH 2 PLAYEN", "Y": -7.945447755, "X": 110.5573042 }, "geometry": { "type": "Point", "coordinates": [ 110.5573042, -7.945447755 ] } },
+{ "type": "Feature", "properties": { "NAMA SEKOLAH": "SMK TAMAN SISWA PLAYEN", "Y": -7.94025558, "X": 110.5493963 }, "geometry": { "type": "Point", "coordinates": [ 110.5493963, -7.94025558 ] } }
+]
+};
+
+      // Function to create custom markers
+      function pointToLayer(feature, latlng) {
+        // Determine marker color based on properties
+        const isSchool = feature.properties.field_3 === 'sekolah';
+        const markerColor = isSchool ? 'red' : 'blue';
+        
+        // Create circle marker
+        return L.circleMarker(latlng, {
+          radius: 8,
+          fillColor: markerColor,
+          color: '#000',
+          weight: 1,
+          opacity: 1,
+          fillOpacity: 0.8
+        });
+      }
+
+      // Function to bind popup to each feature
+      function onEachFeature(feature, layer) {
+        if (feature.properties) {
+    let popupContent = `<div><strong>Koordinat:</strong> ${feature.properties.X}, ${feature.properties.Y}`;
+    
+    if (feature.properties["NAMA SEKOLAH"]) {
+      popupContent += `<br><strong>Nama Sekolah:</strong> ${feature.properties["NAMA SEKOLAH"]}`;
+          }
+          
+          popupContent += '</div>';
+          layer.bindPopup(popupContent);
+        }
+      }
+
+      // Add GeoJSON to map
+      L.geoJSON(geojsonData, {
+        pointToLayer: pointToLayer,
+        onEachFeature: onEachFeature
+      }).addTo(map);
+
+      // Add legend
+      const legend = L.control({position: 'bottomright'});
+      
+      legend.onAdd = function(map) {
+        const div = L.DomUtil.create('div', 'legend');
+        div.innerHTML = `
+          <h4>Legenda</h4>
+          <div><span style="background: blue; width: 15px; height: 15px; display: inline-block; border-radius: 50%; border: 1px solid #000;"></span> Sekolah</div>
+        `;
+        return div;
+      };
+      
+      legend.addTo(map);
+    }
+
+    // CSV Download Buttons (all buttons remain unchanged)
+    document.getElementById("downloadkecamatanpanggang").addEventListener("click", function () {
+      const link = document.createElement("a");
+      link.href = "data/Panggang.pdf";
+      link.download = "data-kecamatan-panggang.pdf";
+      link.click();
+    });
+
+    document.getElementById("downloadkecamatanpaliyan").addEventListener("click", function () {
+      const link = document.createElement("a");
+      link.href = "data/Paliyan.pdf";
+      link.download = "data-kecamatan-paliyan.pdf";
+      link.click();
+    });
+
+    document.getElementById("downloadkecamatansaptosari").addEventListener("click", function () {
+      const link = document.createElement("a");
+      link.href = "data/Saptosari.pdf";
+      link.download = "data-kecamatan-saptosari.pdf";
+      link.click();
+    });
+
+    document.getElementById("downloadkecamatantepus").addEventListener("click", function () {
+      const link = document.createElement("a");
+      link.href = "data/Tepus.pdf";
+      link.download = "data-kecamatan-tepus.pdf";
+      link.click();
+    });
+
+    document.getElementById("downloadkecamatantanjungsari").addEventListener("click", function () {
+      const link = document.createElement("a");
+      link.href = "data/Tanjungsari.pdf";
+      link.download = "data-kecamatan-tanjungsari.pdf";
+      link.click();
+    });
+
+    document.getElementById("downloadkecamatanrongkop").addEventListener("click", function () {
+      const link = document.createElement("a");
+      link.href = "data/Rongkop.pdf";
+      link.download = "data-kecamatan-rongkop.pdf";
+      link.click();
+    });
+
+    document.getElementById("downloadkecamatansemanu").addEventListener("click", function () {
+      const link = document.createElement("a");
+      link.href = "data/Semanu.pdf";
+      link.download = "data-kecamatan-semanu.pdf";
+      link.click();
+    });
+
+    document.getElementById("downloadkecamatanponjong").addEventListener("click", function () {
+      const link = document.createElement("a");
+      link.href = "data/Ponjong.pdf";
+      link.download = "data-kecamatan-ponjong.pdf";
+      link.click();
+    });
+
+    document.getElementById("downloadkecamatangirisubo").addEventListener("click", function () {
+      const link = document.createElement("a");
+      link.href = "data/Girisubo.pdf";
+      link.download = "data-kecamatan-girisubo.pdf";
+      link.click();
+    });
+
+    document.getElementById("downloadkecamatankarangmojo").addEventListener("click", function () {
+      const link = document.createElement("a");
+      link.href = "data/Karangmojo.pdf";
+      link.download = "data-kecamatan-karangmojo.pdf";
+      link.click();
+    });
+
+    document.getElementById("downloadkecamatanwonosari").addEventListener("click", function () {
+      const link = document.createElement("a");
+      link.href = "data/Wonosari.pdf";
+      link.download = "data-kecamatan-wonosari.pdf";
+      link.click();
+    });
+
+    document.getElementById("downloadkecamatanpatuk").addEventListener("click", function () {
+      const link = document.createElement("a");
+      link.href = "data/Patuk.pdf";
+      link.download = "data-kecamatan-patuk.pdf";
+      link.click();
+    });
+
+     document.getElementById("downloadkecamatanplayen").addEventListener("click", function () {
+      const link = document.createElement("a");
+      link.href = "data/Playen.pdf";
+      link.download = "data-kecamatan-playen.pdf";
+      link.click();
+    });
+
+    document.getElementById("downloadkecamatangedangsari").addEventListener("click", function () {
+      const link = document.createElement("a");
+      link.href = "data/Gedangsari.pdf";
+      link.download = "data-kecamatan-gedangsari.pdf";
+      link.click();
+    });
+
+    document.getElementById("downloadkecamatannglipar").addEventListener("click", function () {
+      const link = document.createElement("a");
+      link.href = "data/Nglipar.pdf";
+      link.download = "data-kecamatan-nglipar.pdf";
+      link.click();
+    });
+
+    document.getElementById("downloadkecamatanngawen").addEventListener("click", function () {
+      const link = document.createElement("a");
+      link.href = "data/Ngawen.pdf";
+      link.download = "data-kecamatan-ngawen.pdf";
+      link.click();
+    });
+
+    document.getElementById("downloadkecamatansemin").addEventListener("click", function () {
+      const link = document.createElement("a");
+      link.href = "data/Semin.pdf";
+      link.download = "data-kecamatan-semin.pdf";
+      link.click();
+    });
+
+    document.getElementById("downloadkecamatanpurwosari").addEventListener("click", function () {
+      const link = document.createElement("a");
+      link.href = "data/Purwosari.pdf";
+      link.download = "data-kecamatan-purwosari.pdf";
+      link.click();
+    });
+  </script>
+</body>
+</html>
